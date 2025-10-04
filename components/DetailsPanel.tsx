@@ -297,7 +297,7 @@ function MultiSelectionDetails() {
         <div className="space-y-2">
           <div className="text-white/70 text-sm font-medium">Selected Planets</div>
           <ScrollArea className="h-32">
-            {planets.map((planet, index) => (
+            {planets.map((planet) => (
               <div key={planet.planet_name} className="flex items-center justify-between py-1">
                 <div className="text-white text-sm truncate">{planet.planet_name}</div>
                 <Button

@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Sphere, Ring, Text, Html } from '@react-three/drei';
+import { Sphere, Ring,  Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { PlanetData } from './KeplerVisualizer';
 

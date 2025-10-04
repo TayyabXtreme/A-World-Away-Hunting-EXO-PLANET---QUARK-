@@ -1,6 +1,27 @@
 import { StarSystem, Planet, PlanetCategory } from '@/lib/types';
 
 /**
+ * Interface for filter criteria
+ */
+export interface FilterCriteria {
+  temperatureRange?: {
+    min: number;
+    max: number;
+  };
+  radiusRange?: {
+    min: number;
+    max: number;
+  };
+  planetCategory?: PlanetCategory[];
+  discoveryMethod?: string[];
+  discoveryYear?: {
+    min: number;
+    max: number;
+  };
+  habitableOnly?: boolean;
+}
+
+/**
  * Calculate star color based on temperature using blackbody radiation
  */
 export function getStarColorFromTemperature(temperature: number): string {
@@ -127,7 +148,7 @@ export const formatters = {
 /**
  * Debounce function for search and filter inputs
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   delay: number
 ): (...args: Parameters<T>) => void {
@@ -195,7 +216,7 @@ export function calculateStatistics(starSystems: StarSystem[]) {
 export function filterStarSystems(
   starSystems: StarSystem[],
   searchTerm: string,
-  filters: any
+  filters?: FilterCriteria
 ): StarSystem[] {
   return starSystems.filter(system => {
     // Search filter
@@ -208,8 +229,39 @@ export function filterStarSystems(
       if (!hostnameMatch && !planetMatch) return false;
     }
 
-    // Apply other filters...
-    // (This would include temperature, radius, etc. filters)
+    // Apply filters if provided
+    if (filters) {
+      // Temperature range filter
+      if (filters.temperatureRange) {
+        const starTemp = system.star_properties.temperature_K;
+        if (starTemp < filters.temperatureRange.min || starTemp > filters.temperatureRange.max) {
+          return false;
+        }
+      }
+
+      // Habitable planets filter
+      if (filters.habitableOnly) {
+        const hasHabitablePlanet = system.planets.some(planet => isInHabitableZone(planet));
+        if (!hasHabitablePlanet) return false;
+      }
+
+      // Discovery method filter
+      if (filters.discoveryMethod && filters.discoveryMethod.length > 0) {
+        const hasMatchingMethod = system.planets.some(planet =>
+          filters.discoveryMethod!.includes(planet.discovery_method)
+        );
+        if (!hasMatchingMethod) return false;
+      }
+
+      // Discovery year filter
+      if (filters.discoveryYear) {
+        const hasMatchingYear = system.planets.some(planet =>
+          planet.discovery_year >= filters.discoveryYear!.min &&
+          planet.discovery_year <= filters.discoveryYear!.max
+        );
+        if (!hasMatchingYear) return false;
+      }
+    }
     
     return true;
   });

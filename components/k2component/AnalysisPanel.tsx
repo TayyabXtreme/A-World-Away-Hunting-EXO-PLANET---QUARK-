@@ -209,7 +209,7 @@ const parameters: ParameterConfig[] = [
   }
 ];
 
-export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAnalyze }: AnalysisPanelProps) {
+export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPanelProps) {
   const [formData, setFormData] = useState(planet);
 
   useEffect(() => {

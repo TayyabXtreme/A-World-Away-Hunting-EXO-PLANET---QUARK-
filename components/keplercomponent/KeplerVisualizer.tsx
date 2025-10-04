@@ -3,7 +3,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import Star from './Star';
 import Planet from './Planet';
 import AnalysisPanel from './AnalysisPanel';
@@ -190,7 +190,7 @@ export default function KeplerVisualizer() {
   const [planets, setPlanets] = useState<PlanetData[]>(initialPlanets);
   const [selectedPlanet, setSelectedPlanet] = useState<PlanetData | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const controlsRef = useRef<any>(null);
+  const controlsRef = useRef(null);
 
   const handlePlanetClick = useCallback((planet: PlanetData) => {
     setSelectedPlanet(planet);
@@ -215,7 +215,7 @@ export default function KeplerVisualizer() {
     setSelectedPlanet(prev => prev ? { ...prev, ...updatedData } : null);
   }, [planets, selectedPlanet]);
 
-  const handleAnalyzePlanet = useCallback(async (planetData: PlanetData) => {
+  const handleAnalyzePlanet = useCallback(async () => {
     // Set analyzing state
     handleUpdatePlanet({ isAnalyzing: true });
     // The actual API call will be handled by the AnalysisPanel

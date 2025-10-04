@@ -3,7 +3,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import Star from './Star';
 import Planet from './Planet';
 import AnalysisPanel from './AnalysisPanel';
@@ -203,7 +203,7 @@ export default function K2Visualizer() {
   const [planets, setPlanets] = useState<K2PlanetData[]>(initialPlanets);
   const [selectedPlanet, setSelectedPlanet] = useState<K2PlanetData | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const controlsRef = useRef<any>(null);
+  const controlsRef = useRef(null);
 
   const handlePlanetClick = useCallback((planet: K2PlanetData) => {
     setSelectedPlanet(planet);
@@ -228,7 +228,7 @@ export default function K2Visualizer() {
     setSelectedPlanet(prev => prev ? { ...prev, ...updatedData } : null);
   }, [planets, selectedPlanet]);
 
-  const handleAnalyzePlanet = useCallback(async (planetData: K2PlanetData) => {
+  const handleAnalyzePlanet = useCallback(async () => {
     // Set analyzing state
     handleUpdatePlanet({ isAnalyzing: true });
     // The actual API call will be handled by the AnalysisPanel

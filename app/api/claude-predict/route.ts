@@ -4,6 +4,65 @@ import {
   ConverseCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 
+// TypeScript interfaces for different dataset types
+interface K2PlanetData {
+  pl_orbper?: number;
+  pl_trandep?: number;
+  pl_trandur?: number;
+  pl_imppar?: number;
+  pl_rade?: number;
+  pl_massj?: number;
+  pl_dens?: number;
+  pl_insol?: number;
+  pl_eqt?: number;
+  st_teff?: number;
+  st_rad?: number;
+  st_mass?: number;
+  st_logg?: number;
+  ra?: number;
+  dec?: number;
+  sy_dist?: number;
+}
+
+interface TessPlanetData {
+  pl_orbper?: number;
+  pl_trandurh?: number;
+  pl_trandep?: number;
+  pl_rade?: number;
+  pl_insol?: number;
+  pl_eqt?: number;
+  st_teff?: number;
+  st_logg?: number;
+  st_rad?: number;
+  st_tmag?: number;
+  st_dist?: number;
+  ra?: number;
+  dec?: number;
+}
+
+interface KeplerPlanetData {
+  koi_score?: number;
+  koi_period?: number;
+  koi_time0bk?: number;
+  koi_impact?: number;
+  koi_duration?: number;
+  koi_depth?: number;
+  koi_prad?: number;
+  koi_teq?: number;
+  koi_insol?: number;
+  koi_steff?: number;
+  koi_slogg?: number;
+  koi_srad?: number;
+  koi_model_snr?: number;
+  koi_srho?: number;
+}
+
+interface RequestBody {
+  dataset?: string;
+  prompt?: string;
+  [key: string]: unknown;
+}
+
 // Configure the AWS Bedrock client
 const client = new BedrockRuntimeClient({
   region: process.env.NEXT_AWS_REGION || 'us-east-1',
@@ -55,7 +114,7 @@ function generateMockResponse(dataset: string) {
 }
 
 // Generate K2-specific analysis prompt
-function generateK2Prompt(data: any): string {
+function generateK2Prompt(data: K2PlanetData): string {
   return `You are an expert exoplanet researcher specializing in K2 mission data analysis. Analyze the following K2 planetary candidate parameters and provide a detailed assessment.
 
 K2 Planetary Parameters:
@@ -97,7 +156,7 @@ Consider K2-specific factors:
 }
 
 // Generate TESS-specific analysis prompt
-function generateTessPrompt(data: any): string {
+function generateTessPrompt(data: TessPlanetData): string {
   return `You are an expert exoplanet researcher specializing in TESS mission data analysis. Analyze the following TESS planetary candidate parameters and provide a detailed assessment.
 
 TESS Planetary Parameters:
@@ -136,7 +195,7 @@ Consider TESS-specific factors:
 }
 
 // Generate Kepler-specific analysis prompt
-function generateKeplerPrompt(data: any): string {
+function generateKeplerPrompt(data: KeplerPlanetData): string {
   return `You are an expert exoplanet researcher specializing in Kepler mission data analysis. Analyze the following Kepler Object of Interest (KOI) parameters and provide a detailed assessment.
 
 Kepler Parameters:
@@ -170,7 +229,7 @@ Consider Kepler-specific factors and detection criteria in your analysis.`;
 export async function POST(request: NextRequest) {
   console.log("start")
   try {
-    const body = await request.json();
+    const body = await request.json() as RequestBody;
     
     // Validate AWS credentials first
     if (!validateAWSCredentials()) {
@@ -188,7 +247,7 @@ export async function POST(request: NextRequest) {
     
     // Handle different dataset types
     let prompt: string;
-    let dataset = body.dataset || 'kepler'; // Default to kepler for backward compatibility
+    const dataset = body.dataset || 'kepler'; // Default to kepler for backward compatibility
     
     if (body.prompt) {
       // Legacy prompt-based request
@@ -196,12 +255,12 @@ export async function POST(request: NextRequest) {
     } else {
       // Generate dataset-specific prompts
       if (dataset === 'k2') {
-        prompt = generateK2Prompt(body);
+        prompt = generateK2Prompt(body as unknown as K2PlanetData);
       } else if (dataset === 'tess') {
-        prompt = generateTessPrompt(body);
+        prompt = generateTessPrompt(body as unknown as TessPlanetData);
       } else {
         // Default to Kepler
-        prompt = generateKeplerPrompt(body);
+        prompt = generateKeplerPrompt(body as unknown as KeplerPlanetData);
       }
     }
 
