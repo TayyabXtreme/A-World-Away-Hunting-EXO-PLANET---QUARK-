@@ -40,97 +40,97 @@ const parameters: ParameterConfig[] = [
     max: 1,
     step: 0.01,
     unit: '',
-    description: 'Confidence score for detection'
+    description: 'Detection confidence (0.0 = False Positive, 1.0 = Confirmed)'
   },
   {
     key: 'koi_period',
     label: 'Orbital Period',
     icon: <Orbit className="h-4 w-4" />,
-    min: 0.1,
-    max: 5000,
+    min: 0.2,
+    max: 1000,
     step: 0.1,
     unit: 'days',
-    description: 'Time for one complete orbit'
+    description: 'Time to complete one orbit'
   },
   {
     key: 'koi_time0bk',
     label: 'Transit Epoch',
     icon: <Sun className="h-4 w-4" />,
-    min: 100,
-    max: 200,
+    min: 110,
+    max: 300,
     step: 0.1,
-    unit: 'BJD',
-    description: 'Time of first observed transit'
+    unit: 'BKJD',
+    description: 'Barycenter corrected Julian Date of first transit'
   },
   {
     key: 'koi_impact',
     label: 'Impact Parameter',
     icon: <Globe className="h-4 w-4" />,
     min: 0,
-    max: 1,
+    max: 1.5,
     step: 0.01,
     unit: '',
-    description: 'How centrally planet crosses star'
+    description: 'Transit centrality (0 = central, >1.0 = grazing)'
   },
   {
     key: 'koi_duration',
     label: 'Transit Duration',
     icon: <Activity className="h-4 w-4" />,
-    min: 0.1,
-    max: 24,
+    min: 0.5,
+    max: 12,
     step: 0.1,
     unit: 'hours',
-    description: 'How long transit lasts'
+    description: 'Time planet is transiting the star'
   },
   {
     key: 'koi_depth',
     label: 'Transit Depth',
     icon: <Zap className="h-4 w-4" />,
     min: 10,
-    max: 5000,
+    max: 100000,
     step: 10,
     unit: 'ppm',
-    description: 'How much star dims during transit'
+    description: 'Fractional drop in stellar flux'
   },
   {
     key: 'koi_prad',
     label: 'Planet Radius',
     icon: <Globe className="h-4 w-4" />,
     min: 0.1,
-    max: 10,
+    max: 30,
     step: 0.1,
     unit: 'R⊕',
-    description: 'Size compared to Earth'
+    description: 'Planet radius (>20 often indicates Eclipsing Binaries)'
   },
   {
     key: 'koi_teq',
     label: 'Equilibrium Temperature',
     icon: <Thermometer className="h-4 w-4" />,
-    min: 50,
-    max: 2000,
+    min: 100,
+    max: 3000,
     step: 1,
     unit: 'K',
-    description: 'Expected planet temperature'
+    description: 'Estimated equilibrium temperature of planet'
   },
   {
     key: 'koi_insol',
     label: 'Insolation',
     icon: <Sun className="h-4 w-4" />,
     min: 0.01,
-    max: 100,
+    max: 1000000,
     step: 0.01,
     unit: 'S⊕',
-    description: 'Stellar radiation received'
+    description: 'Incident stellar flux received by planet'
   },
   {
     key: 'koi_steff',
     label: 'Stellar Temperature',
     icon: <Thermometer className="h-4 w-4" />,
     min: 3000,
-    max: 8000,
+    max: 7000,
     step: 10,
     unit: 'K',
-    description: 'Host star surface temperature'
+    description: 'Effective temperature of host star'
   },
   {
     key: 'koi_slogg',
@@ -140,17 +140,37 @@ const parameters: ParameterConfig[] = [
     max: 5,
     step: 0.01,
     unit: 'log(cm/s²)',
-    description: 'Host star surface gravity'
+    description: 'Logarithm of star surface gravity'
   },
   {
     key: 'koi_srad',
     label: 'Stellar Radius',
     icon: <Sun className="h-4 w-4" />,
-    min: 0.1,
-    max: 3,
+    min: 0.3,
+    max: 10,
     step: 0.01,
     unit: 'R☉',
-    description: 'Host star size vs Sun'
+    description: 'Radius of host star'
+  },
+  {
+    key: 'koi_model_snr',
+    label: 'Model SNR',
+    icon: <Activity className="h-4 w-4" />,
+    min: 5,
+    max: 1000,
+    step: 0.1,
+    unit: '',
+    description: 'Signal-to-Noise Ratio (<10 often too low for confidence)'
+  },
+  {
+    key: 'koi_srho',
+    label: 'Stellar Density',
+    icon: <Activity className="h-4 w-4" />,
+    min: 0.01,
+    max: 10,
+    step: 0.01,
+    unit: 'ρ☉',
+    description: 'Stellar density (checks transit parameter consistency)'
   }
 ];
 
@@ -187,6 +207,8 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
           koi_steff: formData.koi_steff,
           koi_slogg: formData.koi_slogg,
           koi_srad: formData.koi_srad,
+          koi_model_snr: formData.koi_model_snr,
+          koi_srho: formData.koi_srho,
         }),
       });
 
@@ -244,6 +266,8 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
           koi_steff: formData.koi_steff,
           koi_slogg: formData.koi_slogg,
           koi_srad: formData.koi_srad,
+          koi_model_snr: formData.koi_model_snr,
+          koi_srho: formData.koi_srho,
         }
       };
 
@@ -266,26 +290,15 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
       // Map Flask API response to our prediction format
       let prediction: 'confirmed' | 'false-positive' | 'candidate';
       
-      // Map based on koi_pdisposition from Flask response
-      if (result.koi_pdisposition) {
-        const disposition = result.koi_pdisposition.toLowerCase();
-        if (disposition.includes('confirmed') || disposition.includes('candidate')) {
+      // Map based on is_exoplanet and koi_pdisposition from Flask response
+      if (result.is_exoplanet === true) {
+        if (result.koi_pdisposition === 'CONFIRMED') {
           prediction = 'confirmed';
-        } else if (disposition.includes('false positive')) {
-          prediction = 'false-positive';
         } else {
           prediction = 'candidate';
         }
       } else {
-        // Fallback based on prediction field
-        const flaskPrediction = result.prediction?.toLowerCase() || '';
-        if (flaskPrediction.includes('exoplanet') && !flaskPrediction.includes('not')) {
-          prediction = 'confirmed';
-        } else if (flaskPrediction.includes('not exoplanet') || flaskPrediction.includes('false')) {
-          prediction = 'false-positive';
-        } else {
-          prediction = 'candidate';
-        }
+        prediction = 'false-positive';
       }
 
       // Update planet with Flask result and store response data
@@ -294,10 +307,11 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
         prediction: prediction,
         flaskResponse: {
           koi_pdisposition: result.koi_pdisposition,
-          prediction: result.prediction,
+          prediction: result.planet_type, // Use planet_type as prediction
           probability: result.probability,
-          status: result.status,
-          timestamp: result.timestamp
+          status: 'success', // Default status since not provided
+          timestamp: new Date().toISOString(), // Generate timestamp since not provided
+          is_exoplanet: result.is_exoplanet
         }
       });
 
@@ -608,11 +622,17 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
                     </div>
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between">
+                        <span className="text-gray-400">Is Exoplanet:</span>
+                        <span className={`font-medium ${planet.flaskResponse.is_exoplanet ? 'text-green-300' : 'text-red-300'}`}>
+                          {planet.flaskResponse.is_exoplanet ? '✅ Yes' : '❌ No'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
                         <span className="text-gray-400">KOI Disposition:</span>
                         <span className="text-green-300 font-medium">{planet.flaskResponse.koi_pdisposition}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Prediction:</span>
+                        <span className="text-gray-400">Planet Type:</span>
                         <span className="text-green-300 font-medium">{planet.flaskResponse.prediction}</span>
                       </div>
                       <div className="flex justify-between">
@@ -620,8 +640,10 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
                         <span className="text-green-300 font-medium">{(planet.flaskResponse.probability * 100).toFixed(1)}%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Status:</span>
-                        <span className="text-green-300 font-medium capitalize">{planet.flaskResponse.status}</span>
+                        <span className="text-gray-400">Confidence:</span>
+                        <span className={`font-medium ${planet.flaskResponse.probability > 0.8 ? 'text-green-300' : planet.flaskResponse.probability > 0.6 ? 'text-yellow-300' : 'text-red-300'}`}>
+                          {planet.flaskResponse.probability > 0.8 ? 'High' : planet.flaskResponse.probability > 0.6 ? 'Medium' : 'Low'}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Timestamp:</span>

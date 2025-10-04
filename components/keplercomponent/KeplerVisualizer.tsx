@@ -27,6 +27,9 @@ export interface PlanetData {
   koi_steff: number;
   koi_slogg: number;
   koi_srad: number;
+  // Additional parameters
+  koi_model_snr: number;
+  koi_srho: number;
   prediction?: 'confirmed' | 'false-positive' | 'candidate' | null;
   isAnalyzing?: boolean;
   // Flask API response data
@@ -36,6 +39,7 @@ export interface PlanetData {
     probability: number;
     status: string;
     timestamp: string;
+    is_exoplanet?: boolean;
   };
   // Claude AI response data  
   claudeResponse?: {
@@ -67,6 +71,8 @@ const initialPlanets: PlanetData[] = [
     koi_steff: 4402,
     koi_slogg: 4.58,
     koi_srad: 0.6,
+    koi_model_snr: 85.2,
+    koi_srho: 2.1,
   },
   {
     id: 'Kepler-186f',
@@ -87,6 +93,8 @@ const initialPlanets: PlanetData[] = [
     koi_steff: 3788,
     koi_slogg: 4.74,
     koi_srad: 0.47,
+    koi_model_snr: 64.5,
+    koi_srho: 3.8,
   },
   {
     id: 'Kepler-452b',
@@ -107,6 +115,8 @@ const initialPlanets: PlanetData[] = [
     koi_steff: 5757,
     koi_slogg: 4.32,
     koi_srad: 1.11,
+    koi_model_snr: 42.3,
+    koi_srho: 0.98,
   },
   {
     id: 'TOI-715b',
@@ -127,6 +137,8 @@ const initialPlanets: PlanetData[] = [
     koi_steff: 3341,
     koi_slogg: 4.81,
     koi_srad: 0.374,
+    koi_model_snr: 27.8,
+    koi_srho: 4.2,
   },
   {
     id: 'Proxima-Cen-b',
@@ -143,10 +155,12 @@ const initialPlanets: PlanetData[] = [
     koi_depth: 1200,
     koi_prad: 1.07,
     koi_teq: 234,
-    koi_insol: 1.5,
+    koi_insol: 1.64,
     koi_steff: 3042,
     koi_slogg: 5.2,
     koi_srad: 0.14,
+    koi_model_snr: 38.9,
+    koi_srho: 5.6,
   },
   {
     id: 'TRAPPIST-1e',
@@ -167,6 +181,8 @@ const initialPlanets: PlanetData[] = [
     koi_steff: 2559,
     koi_slogg: 5.04,
     koi_srad: 0.121,
+    koi_model_snr: 56.7,
+    koi_srho: 8.2,
   },
 ];
 
