@@ -138,12 +138,19 @@ PLANET TYPE CLASSIFICATION:
 
 REQUIRED OUTPUT FORMAT (respond with EXACTLY this JSON structure):
 {
-  "disposition": "CONFIRMED" | "CANDIDATE" | "FALSE POSITIVE",
+  "disposition": "PC" | "CP" | "FP" | "APC" | "KP",
   "confidence": [number between 0.0 and 1.0],
   "reasoning": "[detailed scientific explanation of the TESS analysis]",
   "habitability_assessment": "[assessment of potential for liquid water and habitability]",
   "planet_type": "[classification: Earth-like, Super-Earth, Sub-Neptune, Neptune-size, or Jupiter-size]"
 }
+
+TESS DISPOSITION CLASSIFICATIONS (use these exact values):
+- PC (Planetary Candidate): Strong evidence for a planetary signal, needs follow-up
+- CP (Confirmed Planet): Definitive evidence of an exoplanet through follow-up observations
+- FP (False Positive): Signal determined to be astrophysical false positive (eclipsing binary, etc.)
+- APC (Ambiguous Planetary Candidate): Weak or uncertain evidence, requires more analysis
+- KP (Known Planet): Previously discovered planet re-detected by TESS
 
 Consider TESS-specific factors such as:
 - Short observation baseline requiring strong transit signals
@@ -189,10 +196,10 @@ Based on your scientific analysis of these TESS mission parameters, what is your
         throw new Error('Invalid response format from Claude');
       }
 
-      // Ensure disposition is in correct format
-      const validDispositions = ['CONFIRMED', 'CANDIDATE', 'FALSE POSITIVE'];
+      // Ensure disposition is in correct TESS format
+      const validDispositions = ['PC', 'CP', 'FP', 'APC', 'KP'];
       if (!validDispositions.includes(analysisResult.disposition)) {
-        analysisResult.disposition = 'CANDIDATE'; // Default fallback
+        analysisResult.disposition = 'PC'; // Default to Planetary Candidate
       }
 
       // Ensure confidence is within valid range
@@ -228,8 +235,20 @@ Based on your scientific analysis of these TESS mission parameters, what is your
       console.log('Raw Claude response:', responseText);
       
       // Fallback: Extract key information from text response
-      const disposition = responseText.toLowerCase().includes('confirmed') ? 'CONFIRMED' :
-                         responseText.toLowerCase().includes('false positive') ? 'FALSE POSITIVE' : 'CANDIDATE';
+      let disposition = 'PC'; // Default to Planetary Candidate
+      const lowText = responseText.toLowerCase();
+      
+      if (lowText.includes('confirmed') || lowText.includes(' cp ')) {
+        disposition = 'CP';
+      } else if (lowText.includes('false positive') || lowText.includes(' fp ')) {
+        disposition = 'FP';
+      } else if (lowText.includes('ambiguous') || lowText.includes(' apc ')) {
+        disposition = 'APC';
+      } else if (lowText.includes('known planet') || lowText.includes(' kp ')) {
+        disposition = 'KP';
+      } else if (lowText.includes('candidate') || lowText.includes(' pc ')) {
+        disposition = 'PC';
+      }
       
       return NextResponse.json({
         disposition,

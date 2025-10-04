@@ -177,6 +177,18 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
     onUpdate({ [key]: value });
   };
 
+  // Helper function to get full TESS disposition name
+  const getTessDispositionName = (disposition: string) => {
+    switch (disposition) {
+      case 'PC': return 'PC (Planetary Candidate)';
+      case 'CP': return 'CP (Confirmed Planet)';
+      case 'FP': return 'FP (False Positive)';
+      case 'APC': return 'APC (Ambiguous Planetary Candidate)';
+      case 'KP': return 'KP (Known Planet)';
+      default: return disposition;
+    }
+  };
+
   const handleAnalyze = async () => {
     try {
       onUpdate({ isAnalyzing: true });
@@ -209,13 +221,14 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
 
       const result = await response.json();
       
-      // Map API response to our prediction format
+      // Map TESS API response to our prediction format
       let prediction: 'confirmed' | 'false-positive' | 'candidate';
-      if (result.disposition === 'CONFIRMED') {
+      if (result.disposition === 'CP' || result.disposition === 'KP') {
         prediction = 'confirmed';
-      } else if (result.disposition === 'FALSE POSITIVE') {
+      } else if (result.disposition === 'FP') {
         prediction = 'false-positive';
       } else {
+        // PC (Planetary Candidate) or APC (Ambiguous Planetary Candidate)
         prediction = 'candidate';
       }
 
@@ -578,8 +591,8 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
                     </div>
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Disposition:</span>
-                        <span className="text-red-300 font-medium">{planet.claudeResponse.disposition}</span>
+                        <span className="text-gray-400">TESS Disposition:</span>
+                        <span className="text-red-300 font-medium">{getTessDispositionName(planet.claudeResponse.disposition)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Confidence:</span>
