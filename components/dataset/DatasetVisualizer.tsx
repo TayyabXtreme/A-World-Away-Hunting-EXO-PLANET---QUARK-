@@ -60,18 +60,70 @@ export default function DatasetVisualizer() {
   });
 
   const handlePlanetSelect = useCallback((planet: UnifiedPlanet | null) => {
+    console.log('DatasetVisualizer: Planet selected:', planet?.name || 'null');
     setState(prev => ({ ...prev, selectedPlanet: planet }));
     setShowDetails(!!planet);
+    console.log('DatasetVisualizer: Details panel should be:', !!planet ? 'visible' : 'hidden');
   }, []);
 
   const handleFilterChange = useCallback((filter: TelescopeFilter) => {
-    setState(prev => ({ ...prev, filter, selectedPlanet: null }));
-    setShowDetails(false);
+    setState(prev => {
+      // Check if currently selected planet would still be visible with new filter
+      const newFilteredPlanets = prev.planets.filter(planet => {
+        const matchesFilter = filter === 'All' || planet.telescope === filter;
+        const matchesSearch = !prev.searchQuery || 
+          planet.name.toLowerCase().includes(prev.searchQuery.toLowerCase()) ||
+          (planet.hostname && planet.hostname.toLowerCase().includes(prev.searchQuery.toLowerCase()));
+        return matchesFilter && matchesSearch;
+      });
+      
+      // Only deselect planet if it's no longer visible
+      const selectedPlanetStillVisible = prev.selectedPlanet && 
+        newFilteredPlanets.some(p => p.id === prev.selectedPlanet?.id);
+      
+      const newSelectedPlanet = selectedPlanetStillVisible ? prev.selectedPlanet : null;
+      
+      // Update details panel visibility
+      if (!newSelectedPlanet) {
+        setShowDetails(false);
+      }
+      
+      return { 
+        ...prev, 
+        filter,
+        selectedPlanet: newSelectedPlanet
+      };
+    });
   }, []);
 
   const handleSearchChange = useCallback((query: string) => {
-    setState(prev => ({ ...prev, searchQuery: query, selectedPlanet: null }));
-    setShowDetails(false);
+    setState(prev => {
+      // Check if currently selected planet would still be visible with new search
+      const newFilteredPlanets = prev.planets.filter(planet => {
+        const matchesFilter = prev.filter === 'All' || planet.telescope === prev.filter;
+        const matchesSearch = !query || 
+          planet.name.toLowerCase().includes(query.toLowerCase()) ||
+          (planet.hostname && planet.hostname.toLowerCase().includes(query.toLowerCase()));
+        return matchesFilter && matchesSearch;
+      });
+      
+      // Only deselect planet if it's no longer visible
+      const selectedPlanetStillVisible = prev.selectedPlanet && 
+        newFilteredPlanets.some(p => p.id === prev.selectedPlanet?.id);
+      
+      const newSelectedPlanet = selectedPlanetStillVisible ? prev.selectedPlanet : null;
+      
+      // Update details panel visibility
+      if (!newSelectedPlanet) {
+        setShowDetails(false);
+      }
+      
+      return { 
+        ...prev, 
+        searchQuery: query,
+        selectedPlanet: newSelectedPlanet
+      };
+    });
   }, []);
 
   const toggleFullscreen = () => {
@@ -232,6 +284,9 @@ export default function DatasetVisualizer() {
           <div>Filtered: {filteredPlanets.length}</div>
           <div>Filter: {state.filter}</div>
           <div>Search: {state.searchQuery || 'None'}</div>
+          <div>Selected Planet: {state.selectedPlanet?.name || 'None'}</div>
+          <div>Show Details: {showDetails ? 'Yes' : 'No'}</div>
+          <div>Panel Should Show: {(showDetails && state.selectedPlanet) ? 'Yes' : 'No'}</div>
         </div>
       )}
 

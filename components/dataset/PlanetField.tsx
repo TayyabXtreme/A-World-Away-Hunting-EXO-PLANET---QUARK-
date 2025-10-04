@@ -196,7 +196,22 @@ export default function PlanetField({ planets, selectedPlanet, onPlanetSelect }:
         return (
           <group key={planet.id} position={[position.x, position.y, position.z]}>
             {/* Main planet sphere with color */}
-            <mesh scale={[scale, scale, scale]}>
+            <mesh 
+              scale={[scale, scale, scale]}
+              onClick={(event) => {
+                event.stopPropagation();
+                onPlanetSelect(planet === selectedPlanet ? null : planet);
+              }}
+              onPointerEnter={(event) => {
+                event.stopPropagation();
+                setHoveredIndex(index);
+                document.body.style.cursor = 'pointer';
+              }}
+              onPointerLeave={() => {
+                setHoveredIndex(null);
+                document.body.style.cursor = 'default';
+              }}
+            >
               <sphereGeometry args={[1, 32, 24]} />
               <meshStandardMaterial
                 color={color}
