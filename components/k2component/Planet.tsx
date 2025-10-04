@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useRef, useState } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
-import { Sphere, Html } from '@react-three/drei';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useFrame } from '@react-three/fiber';
+import { Sphere, Ring, Html } from '@react-three/drei';
 import * as THREE from 'three';
-import type { K2PlanetData } from './K2Visualizer';
+import { K2PlanetData } from './K2Visualizer';
 
 interface PlanetProps {
   data: K2PlanetData;
@@ -14,63 +13,111 @@ interface PlanetProps {
 }
 
 export default function Planet({ data, onClick, isSelected }: PlanetProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const groupRef = useRef<THREE.Group>(null);
+  const planetRef = useRef<THREE.Mesh>(null!);
+  const orbitRef = useRef<THREE.Mesh>(null!);
+  const glowRef = useRef<THREE.Mesh>(null!);
   const [hovered, setHovered] = useState(false);
-  const { camera } = useThree();
+  const [orbitProgress, setOrbitProgress] = useState(Math.random() * Math.PI * 2);
 
   useFrame((state) => {
-    if (groupRef.current) {
-      // Orbital motion
-      const angle = state.clock.elapsedTime * data.speed;
-      groupRef.current.position.x = Math.cos(angle) * data.orbitRadius;
-      groupRef.current.position.z = Math.sin(angle) * data.orbitRadius;
-    }
+    const time = state.clock.getElapsedTime();
     
-    if (meshRef.current) {
-      // Planet rotation
-      meshRef.current.rotation.y += 0.01;
-      
-      // Pulsing effect when selected
-      if (isSelected) {
-        const pulse = Math.sin(state.clock.elapsedTime * 4) * 0.1 + 1;
-        meshRef.current.scale.setScalar(pulse);
+    // Update orbit progress
+    const newProgress = orbitProgress + data.speed;
+    setOrbitProgress(newProgress);
+
+    // Calculate position based on orbit
+    const x = Math.cos(newProgress) * data.orbitRadius;
+    const z = Math.sin(newProgress) * data.orbitRadius;
+    const y = Math.sin(newProgress * 0.5) * 0.5; // Small vertical oscillation
+
+    if (planetRef.current) {
+      planetRef.current.position.set(x, y, z);
+      planetRef.current.rotation.y = time * 0.5;
+      planetRef.current.rotation.x = time * 0.2;
+
+      // Scale effect when selected or hovered
+      const targetScale = isSelected ? 2.2 : (hovered ? 1.8 : 1);
+      planetRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.15);
+    }
+
+    // Animate glow
+    if (glowRef.current) {
+      const glowScale = isSelected ? 3 : (hovered ? 2.5 : 1.2);
+      const pulseFactor = 1 + Math.sin(time * 3) * 0.15;
+      glowRef.current.scale.setScalar(glowScale * pulseFactor);
+      glowRef.current.position.copy(planetRef.current.position);
+
+      // Analysis glow effect
+      if (data.isAnalyzing) {
+        const analyzeGlow = 1 + Math.sin(time * 8) * 0.4;
+        glowRef.current.scale.setScalar(analyzeGlow * 3);
+        (glowRef.current.material as THREE.MeshBasicMaterial).opacity = 0.9;
       } else {
-        meshRef.current.scale.setScalar(1);
+        (glowRef.current.material as THREE.MeshBasicMaterial).opacity = hovered || isSelected ? 0.6 : 0.3;
+      }
+    }
+
+    // Animate orbit ring
+    if (orbitRef.current) {
+      orbitRef.current.visible = hovered || isSelected;
+      if (orbitRef.current.visible) {
+        orbitRef.current.rotation.x = -Math.PI / 2;
+        const material = orbitRef.current.material as THREE.MeshBasicMaterial;
+        material.opacity = isSelected ? 0.6 : 0.3;
       }
     }
   });
 
-  const getPlanetType = () => {
-    if (data.pl_rade < 1.25) return "Rocky";
-    if (data.pl_rade < 2.0) return "Super-Earth";
-    if (data.pl_rade < 4.0) return "Mini-Neptune";
-    if (data.pl_rade < 11.0) return "Neptune-like";
-    return "Jupiter-like";
+  const getPredictionColor = () => {
+    if (data.prediction === 'confirmed') return '#10B981'; // Green
+    if (data.prediction === 'false-positive') return '#EF4444'; // Red
+    if (data.prediction === 'candidate') return '#F59E0B'; // Yellow
+    return data.color;
   };
 
-  const getHabitabilityZone = () => {
-    if (data.pl_eqt >= 273 && data.pl_eqt <= 373) return "Habitable Zone";
-    if (data.pl_eqt < 273) return "Too Cold";
-    return "Too Hot";
+  const getPredictionLabel = () => {
+    if (data.prediction === 'confirmed') return '🟢 Exoplanet';
+    if (data.prediction === 'false-positive') return '🔴 False Positive';
+    if (data.prediction === 'candidate') return '🟡 Candidate';
+    return null;
   };
 
   return (
-    <group ref={groupRef}>
-      {/* Orbital Path */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[data.orbitRadius - 0.02, data.orbitRadius + 0.02, 64]} />
-        <meshBasicMaterial 
-          color={isSelected ? "#FFD700" : "#444444"} 
-          transparent 
-          opacity={isSelected ? 0.6 : 0.2} 
+    <group>
+      {/* Orbit Ring */}
+      <Ring
+        ref={orbitRef}
+        args={[data.orbitRadius - 0.1, data.orbitRadius + 0.1, 64]}
+        visible={false}
+      >
+        <meshBasicMaterial
+          color={isSelected ? "#FF8C00" : "#6B7280"}
+          transparent
+          opacity={0.3}
+          side={THREE.DoubleSide}
         />
-      </mesh>
+      </Ring>
 
-      {/* Planet */}
+      {/* Planet Glow */}
       <Sphere
-        ref={meshRef}
+        ref={glowRef}
+        args={[data.size * 2, 16, 16]}
+        position={data.position}
+      >
+        <meshBasicMaterial
+          color={data.isAnalyzing ? "#FF8C00" : getPredictionColor()}
+          transparent
+          opacity={0.3}
+          side={THREE.BackSide}
+        />
+      </Sphere>
+
+      {/* Main Planet */}
+      <Sphere
+        ref={planetRef}
         args={[data.size, 32, 32]}
+        position={data.position}
         onClick={(e) => {
           e.stopPropagation();
           onClick();
@@ -80,192 +127,120 @@ export default function Planet({ data, onClick, isSelected }: PlanetProps) {
           setHovered(true);
           document.body.style.cursor = 'pointer';
         }}
-        onPointerLeave={(e) => {
-          e.stopPropagation();
+        onPointerLeave={() => {
           setHovered(false);
           document.body.style.cursor = 'auto';
         }}
       >
         <meshStandardMaterial
-          color={data.color}
-          emissive={isSelected ? data.color : '#000000'}
-          emissiveIntensity={isSelected ? 0.3 : 0}
+          color={getPredictionColor()}
+          emissive={data.isAnalyzing ? "#B45309" : (hovered ? "#B45309" : "#000000")}
+          emissiveIntensity={data.isAnalyzing ? 0.4 : (hovered ? 0.2 : 0.1)}
           roughness={0.7}
-          metalness={0.1}
+          metalness={0.3}
         />
       </Sphere>
 
-      {/* Planet Atmosphere */}
-      <Sphere args={[data.size * 1.1, 32, 32]}>
-        <meshBasicMaterial
-          color={data.color}
-          transparent
-          opacity={0.1}
-          side={THREE.BackSide}
-        />
-      </Sphere>
+      {/* Analysis Sparkles */}
+      {data.isAnalyzing && (
+        <group position={planetRef.current?.position}>
+          {[...Array(12)].map((_, i) => (
+            <Sphere key={i} args={[0.04, 8, 8]} position={[
+              Math.cos(i * Math.PI / 6) * (data.size + 0.8),
+              Math.sin(i * Math.PI / 6) * 0.3,
+              Math.sin(i * Math.PI / 6) * (data.size + 0.8)
+            ]}>
+              <meshBasicMaterial color="#FF8C00" transparent opacity={0.9} />
+            </Sphere>
+          ))}
+        </group>
+      )}
 
-      {/* Enhanced Hover Tooltip */}
-      {hovered && (
+      {/* Prediction Label */}
+      {data.prediction && !data.isAnalyzing && (
         <Html
+          position={[
+            planetRef.current?.position.x || 0,
+            (planetRef.current?.position.y || 0) + data.size + 1.5,
+            planetRef.current?.position.z || 0
+          ]}
           center
           distanceFactor={8}
-          position={[0, data.size + 2, 0]}
-          style={{
-            pointerEvents: 'none',
-            userSelect: 'none',
-            zIndex: 1000,
-          }}
+          occlude
         >
-          <AnimatePresence>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: 10 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="bg-black/90 backdrop-blur-xl rounded-2xl p-6 border border-gray-600/50 shadow-2xl"
-              style={{
-                width: '500px',
-                minHeight: '450px',
-                fontSize: '16px',
-                lineHeight: '1.6',
-              }}
-            >
-              {/* Header */}
-              <div className="mb-4">
-                <h3 className="text-white font-bold text-2xl mb-2 flex items-center gap-2">
-                  🪐 {data.id}
-                  <span className="text-lg font-normal text-gray-300">
-                    ({getPlanetType()})
-                  </span>
-                </h3>
-                <div className="flex gap-2 mb-3">
-                  <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm font-medium">
-                    K2 Mission
-                  </span>
-                  <span 
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      getHabitabilityZone() === "Habitable Zone" 
-                        ? "bg-green-500/20 text-green-300"
-                        : getHabitabilityZone() === "Too Cold"
-                        ? "bg-blue-500/20 text-blue-300"
-                        : "bg-red-500/20 text-red-300"
-                    }`}
-                  >
-                    {getHabitabilityZone()}
-                  </span>
-                </div>
-              </div>
-
-              {/* Planet Parameters Grid */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                {/* Physical Properties */}
-                <div className="space-y-3">
-                  <h4 className="text-yellow-400 font-semibold text-lg mb-2">🌍 Physical Properties</h4>
-                  
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Radius:</span>
-                      <span className="text-white font-medium">{data.pl_rade.toFixed(2)} R⊕</span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Mass:</span>
-                      <span className="text-white font-medium">{data.pl_massj.toFixed(3)} MJ</span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Density:</span>
-                      <span className="text-white font-medium">{data.pl_dens.toFixed(1)} g/cm³</span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Temperature:</span>
-                      <span className="text-white font-medium">{data.pl_eqt.toFixed(0)} K</span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Incident Flux:</span>
-                      <span className="text-white font-medium">{data.pl_insol.toFixed(1)} F⊕</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Orbital Properties */}
-                <div className="space-y-3">
-                  <h4 className="text-blue-400 font-semibold text-lg mb-2">🛸 Orbital Properties</h4>
-                  
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Period:</span>
-                      <span className="text-white font-medium">{data.pl_orbper.toFixed(2)} days</span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Transit Depth:</span>
-                      <span className="text-white font-medium">{(data.pl_trandep * 1000).toFixed(2)} ppm</span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Transit Duration:</span>
-                      <span className="text-white font-medium">{data.pl_trandur.toFixed(2)} hrs</span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Impact Parameter:</span>
-                      <span className="text-white font-medium">{data.pl_imppar.toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Star Properties */}
-              <div className="mt-4 pt-4 border-t border-gray-600/50">
-                <h4 className="text-orange-400 font-semibold text-lg mb-3">⭐ Host Star Properties</h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Temperature:</span>
-                      <span className="text-white font-medium">{data.st_teff.toFixed(0)} K</span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Radius:</span>
-                      <span className="text-white font-medium">{data.st_rad.toFixed(2)} R☉</span>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Mass:</span>
-                      <span className="text-white font-medium">{data.st_mass.toFixed(2)} M☉</span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Distance:</span>
-                      <span className="text-white font-medium">{data.sy_dist.toFixed(1)} pc</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="mt-4 pt-4 border-t border-gray-600/50">
-                <p className="text-gray-400 text-sm text-center">
-                  💫 Click to analyze with AI • 🔍 Scroll to zoom • 🖱️ Drag to explore
-                </p>
-              </div>
-            </motion.div>
-          </AnimatePresence>
+          <div className="bg-black/90 backdrop-blur-sm border border-gray-700/50 rounded-lg px-4 py-2 text-sm font-bold whitespace-nowrap pointer-events-none shadow-2xl">
+            <span className="text-white">{getPredictionLabel()}</span>
+          </div>
         </Html>
       )}
 
-      {/* Selection Ring */}
-      {isSelected && (
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[data.size * 1.3, data.size * 1.4, 32]} />
-          <meshBasicMaterial color="#FFD700" transparent opacity={0.8} />
-        </mesh>
+      {/* Analyzing Label */}
+      {data.isAnalyzing && (
+        <Html
+          position={[
+            planetRef.current?.position.x || 0,
+            (planetRef.current?.position.y || 0) + data.size + 1.5,
+            planetRef.current?.position.z || 0
+          ]}
+          center
+          distanceFactor={8}
+          occlude
+        >
+          <div className="bg-orange-600/95 backdrop-blur-sm border border-orange-400/50 rounded-lg px-4 py-2 text-sm font-bold whitespace-nowrap pointer-events-none animate-pulse shadow-2xl">
+            <span className="text-white">🔄 Analyzing...</span>
+          </div>
+        </Html>
+      )}
+
+      {/* Planet Info on Hover */}
+      {hovered && !isSelected && (
+        <Html
+          position={[
+            planetRef.current?.position.x || 0,
+            (planetRef.current?.position.y || 0) - data.size - 4,
+            planetRef.current?.position.z || 0
+          ]}
+          center
+          distanceFactor={4}
+          occlude
+        >
+          <div className="bg-black/98 backdrop-blur-lg border-2 border-orange-400/60 rounded-2xl p-8 text-gray-200 pointer-events-none shadow-2xl min-w-[500px] min-h-[450px]">
+            <div className="font-bold text-white mb-6 text-center text-3xl border-b-2 border-gray-600 pb-4">
+              {data.id}
+            </div>
+            <div className="space-y-5">
+              <div className="flex justify-between items-center py-3 border-b border-gray-700/50">
+                <span className="font-semibold text-xl">Orbital Period:</span> 
+                <span className="text-orange-300 font-bold text-2xl">{data.pl_orbper.toFixed(1)} days</span>
+              </div>
+              <div className="flex justify-between items-center py-3 border-b border-gray-700/50">
+                <span className="font-semibold text-xl">Planet Radius:</span> 
+                <span className="text-green-300 font-bold text-2xl">{data.pl_rade.toFixed(2)} R⊕</span>
+              </div>
+              <div className="flex justify-between items-center py-3 border-b border-gray-700/50">
+                <span className="font-semibold text-xl">Transit Depth:</span> 
+                <span className="text-yellow-300 font-bold text-2xl">{(data.pl_trandep * 1000000).toFixed(0)} ppm</span>
+              </div>
+              <div className="flex justify-between items-center py-3 border-b border-gray-700/50">
+                <span className="font-semibold text-xl">Temperature:</span> 
+                <span className="text-red-300 font-bold text-2xl">{data.pl_eqt.toFixed(0)} K</span>
+              </div>
+              <div className="flex justify-between items-center py-3 border-b border-gray-700/50">
+                <span className="font-semibold text-xl">Star Temperature:</span> 
+                <span className="text-orange-300 font-bold text-2xl">{data.st_teff.toFixed(0)} K</span>
+              </div>
+              <div className="flex justify-between items-center py-3 border-b border-gray-700/50">
+                <span className="font-semibold text-xl">System Distance:</span> 
+                <span className="text-purple-300 font-bold text-2xl">{data.sy_dist.toFixed(1)} pc</span>
+              </div>
+            </div>
+            <div className="text-center mt-6 pt-5 border-t-2 border-gray-600">
+              <div className="text-orange-400 font-bold text-2xl animate-pulse bg-orange-500/30 rounded-xl py-4 px-6 border border-orange-400/50">
+                🔍 Click to Analyze Planet
+              </div>
+            </div>
+          </div>
+        </Html>
       )}
     </group>
   );

@@ -2,15 +2,30 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, Zap, Activity, Globe, Thermometer, Sun, Orbit } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { 
+  X, 
+  Activity, 
+  Globe, 
+  Sun, 
+  Thermometer, 
+  Zap,
+  Orbit,
+  Gauge,
+  CircleDot,
+  Target,
+  Weight,
+  Compass,
+  MapPin,
+  Ruler
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import type { K2PlanetData } from './K2Visualizer';
+import { Label } from '@/components/ui/label';
+import { K2PlanetData } from './K2Visualizer';
 
 interface AnalysisPanelProps {
   planet: K2PlanetData;
@@ -36,79 +51,79 @@ const parameters: ParameterConfig[] = [
     key: 'pl_orbper',
     label: 'Orbital Period',
     icon: <Orbit className="h-4 w-4" />,
-    min: 0.1,
+    min: 0.2,
     max: 1000,
     step: 0.1,
     unit: 'days',
-    description: 'Time for one complete orbit around the host star'
+    description: 'Time to complete one orbit around the star'
   },
   {
     key: 'pl_trandep',
     label: 'Transit Depth',
     icon: <Activity className="h-4 w-4" />,
     min: 0.00001,
-    max: 0.1,
-    step: 0.00001,
+    max: 0.5,
+    step: 0.000001,
     unit: 'fraction',
-    description: 'Fraction of starlight blocked during transit'
+    description: 'Fraction of stellar flux blocked during transit'
   },
   {
     key: 'pl_trandur',
     label: 'Transit Duration',
-    icon: <Activity className="h-4 w-4" />,
-    min: 0.1,
+    icon: <Gauge className="h-4 w-4" />,
+    min: 0.5,
     max: 12,
     step: 0.1,
     unit: 'hours',
-    description: 'Duration of planet transit across star'
+    description: 'Time planet takes to cross stellar disk'
   },
   {
     key: 'pl_imppar',
     label: 'Impact Parameter',
-    icon: <Activity className="h-4 w-4" />,
-    min: 0,
+    icon: <Target className="h-4 w-4" />,
+    min: 0.0,
     max: 1.5,
     step: 0.01,
     unit: '',
-    description: 'Distance from star center during transit'
+    description: 'Transit centrality (0 = central, >1.0 = grazing)'
   },
   {
     key: 'pl_rade',
     label: 'Planet Radius',
     icon: <Globe className="h-4 w-4" />,
-    min: 0.1,
-    max: 25,
-    step: 0.01,
+    min: 0.5,
+    max: 20.0,
+    step: 0.1,
     unit: 'R⊕',
-    description: 'Planet radius (>20 often indicates Eclipsing Binaries)'
+    description: 'Planet radius in Earth radii'
   },
   {
     key: 'pl_massj',
     label: 'Planet Mass',
-    icon: <Globe className="h-4 w-4" />,
+    icon: <Weight className="h-4 w-4" />,
     min: 0.001,
-    max: 10,
+    max: 20.0,
     step: 0.001,
     unit: 'MJ',
-    description: 'Mass relative to Jupiter'
+    description: 'Planet mass in Jupiter masses'
   },
   {
     key: 'pl_dens',
     label: 'Planet Density',
-    icon: <Activity className="h-4 w-4" />,
+    icon: <CircleDot className="h-4 w-4" />,
     min: 0.1,
-    max: 20,
+    max: 50.0,
     step: 0.1,
     unit: 'g/cm³',
-    description: 'Average density of the planet'
+    description: 'Planet bulk density'
   },
   {
     key: 'pl_insol',
-    label: 'Incident Stellar Flux',
+    label: 'Insolation',
     icon: <Sun className="h-4 w-4" />,
-    min: 0.01,
-    max: 1000,
-    step: 0.01,
+    min: 0.1,
+    max: 100000,
+    step: 0.1,
     unit: 'S⊕',
     description: 'Incident stellar flux received by planet'
   },
@@ -116,18 +131,18 @@ const parameters: ParameterConfig[] = [
     key: 'pl_eqt',
     label: 'Equilibrium Temperature',
     icon: <Thermometer className="h-4 w-4" />,
-    min: 50,
+    min: 100,
     max: 3000,
     step: 1,
     unit: 'K',
-    description: 'Estimated equilibrium temperature of planet'
+    description: 'Estimated equilibrium temperature'
   },
   {
     key: 'st_teff',
     label: 'Stellar Temperature',
     icon: <Thermometer className="h-4 w-4" />,
-    min: 2500,
-    max: 10000,
+    min: 3000,
+    max: 7000,
     step: 10,
     unit: 'K',
     description: 'Effective temperature of host star'
@@ -136,61 +151,61 @@ const parameters: ParameterConfig[] = [
     key: 'st_rad',
     label: 'Stellar Radius',
     icon: <Sun className="h-4 w-4" />,
-    min: 0.1,
-    max: 20,
+    min: 0.3,
+    max: 10.0,
     step: 0.01,
     unit: 'R☉',
-    description: 'Radius of host star'
+    description: 'Radius of host star in solar radii'
   },
   {
     key: 'st_mass',
     label: 'Stellar Mass',
-    icon: <Sun className="h-4 w-4" />,
+    icon: <Weight className="h-4 w-4" />,
     min: 0.1,
-    max: 5,
+    max: 2.0,
     step: 0.01,
     unit: 'M☉',
-    description: 'Mass of host star relative to Sun'
+    description: 'Mass of host star in solar masses'
   },
   {
     key: 'st_logg',
     label: 'Stellar Gravity',
     icon: <Activity className="h-4 w-4" />,
     min: 3.0,
-    max: 5.5,
+    max: 5.0,
     step: 0.01,
     unit: 'log(cm/s²)',
-    description: 'Logarithm of star surface gravity'
+    description: 'Logarithm of stellar surface gravity'
   },
   {
     key: 'ra',
     label: 'Right Ascension',
-    icon: <Activity className="h-4 w-4" />,
+    icon: <Compass className="h-4 w-4" />,
     min: 0,
     max: 360,
     step: 0.1,
-    unit: 'deg',
-    description: 'Celestial coordinate (longitude)'
+    unit: 'degrees',
+    description: 'Right ascension coordinate'
   },
   {
     key: 'dec',
     label: 'Declination',
-    icon: <Activity className="h-4 w-4" />,
+    icon: <MapPin className="h-4 w-4" />,
     min: -90,
     max: 90,
     step: 0.1,
-    unit: 'deg',
-    description: 'Celestial coordinate (latitude)'
+    unit: 'degrees',
+    description: 'Declination coordinate'
   },
   {
     key: 'sy_dist',
     label: 'System Distance',
-    icon: <Activity className="h-4 w-4" />,
-    min: 1,
-    max: 2000,
-    step: 0.1,
+    icon: <Ruler className="h-4 w-4" />,
+    min: 10,
+    max: 5000,
+    step: 1,
     unit: 'pc',
-    description: 'Distance to planetary system'
+    description: 'Distance to the planetary system'
   }
 ];
 
@@ -209,13 +224,15 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
 
   const handleAnalyze = async () => {
     try {
+      onUpdate({ isAnalyzing: true });
+
       const response = await fetch('/api/claude-predict', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          // K2 parameters for Claude analysis
+          dataset: 'k2',
           pl_orbper: formData.pl_orbper,
           pl_trandep: formData.pl_trandep,
           pl_trandur: formData.pl_trandur,
@@ -232,12 +249,11 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
           ra: formData.ra,
           dec: formData.dec,
           sy_dist: formData.sy_dist,
-          dataset: 'k2'
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Prediction request failed');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
@@ -277,35 +293,37 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
       onUpdate({ isAnalyzing: true });
 
       const payload = {
-        // K2 parameters for Flask ML model
-        pl_orbper: formData.pl_orbper,
-        pl_trandep: formData.pl_trandep,
-        pl_trandur: formData.pl_trandur,
-        pl_imppar: formData.pl_imppar,
-        pl_rade: formData.pl_rade,
-        pl_massj: formData.pl_massj,
-        pl_dens: formData.pl_dens,
-        pl_insol: formData.pl_insol,
-        pl_eqt: formData.pl_eqt,
-        st_teff: formData.st_teff,
-        st_rad: formData.st_rad,
-        st_mass: formData.st_mass,
-        st_logg: formData.st_logg,
-        ra: formData.ra,
-        dec: formData.dec,
-        sy_dist: formData.sy_dist
+        features: {
+          pl_orbper: formData.pl_orbper,
+          pl_trandep: formData.pl_trandep,
+          pl_trandur: formData.pl_trandur,
+          pl_imppar: formData.pl_imppar,
+          pl_rade: formData.pl_rade,
+          pl_massj: formData.pl_massj,
+          pl_dens: formData.pl_dens,
+          pl_insol: formData.pl_insol,
+          pl_eqt: formData.pl_eqt,
+          st_teff: formData.st_teff,
+          st_rad: formData.st_rad,
+          st_mass: formData.st_mass,
+          st_logg: formData.st_logg,
+          ra: formData.ra,
+          dec: formData.dec,
+          sy_dist: formData.sy_dist,
+        }
       };
 
-      const response = await fetch('/api/predict/k2', {
+      const response = await fetch('http://127.0.0.1:5000/predict/k2', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-API-KEY': 'QzQBpd3vd1K4fBeRdPMBvH4rwphF7Nns4Y-T1cfj9PY'
         },
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error(`Flask API request failed: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
@@ -314,15 +332,16 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
       // Map Flask API response to our prediction format
       let prediction: 'confirmed' | 'false-positive' | 'candidate';
       
-      // Map based on is_exoplanet and koi_pdisposition from Flask response
-      if (result.is_exoplanet === true) {
-        if (result.koi_pdisposition === 'CONFIRMED') {
-          prediction = 'confirmed';
-        } else {
-          prediction = 'candidate';
-        }
-      } else {
+      // Map based on archive_disposition from Flask response
+      if (result.archive_disposition === 'CONFIRMED') {
+        prediction = 'confirmed';
+      } else if (result.archive_disposition === 'FALSE POSITIVE') {
         prediction = 'false-positive';
+      } else if (result.archive_disposition === 'CANDIDATE') {
+        prediction = 'candidate';
+      } else {
+        // Default to candidate for unknown dispositions
+        prediction = 'candidate';
       }
 
       // Update planet with Flask result and store response data
@@ -330,12 +349,11 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
         isAnalyzing: false, 
         prediction: prediction,
         flaskResponse: {
-          koi_pdisposition: result.koi_pdisposition,
-          prediction: result.planet_type, // Use planet_type as prediction
+          archive_disposition: result.archive_disposition,
+          planet_type: result.planet_type,
           probability: result.probability,
-          status: 'success', // Default status since not provided
-          timestamp: new Date().toISOString(), // Generate timestamp since not provided
-          is_exoplanet: result.is_exoplanet
+          status: 'success',
+          timestamp: new Date().toISOString(),
         }
       });
 
@@ -344,14 +362,14 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
       onUpdate({ isAnalyzing: false });
       
       // Show error message to user
-      alert(`Flask API Error: ${error instanceof Error ? error.message : 'Connection failed. Make sure Flask server is running.'}`);
+      alert(`Flask API Error: ${error instanceof Error ? error.message : 'Connection failed. Make sure Flask server is running on http://127.0.0.1:5000'}`);
     }
   };
 
   const getPredictionBadge = () => {
     if (planet.isAnalyzing) {
       return (
-        <Badge variant="outline" className="border-blue-400/50 text-blue-400 bg-blue-400/10 animate-pulse">
+        <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 border-blue-400/30 animate-pulse">
           🔄 Analyzing...
         </Badge>
       );
@@ -359,31 +377,31 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
 
     if (planet.prediction === 'confirmed') {
       return (
-        <Badge variant="outline" className="border-green-400/50 text-green-400 bg-green-400/10">
-          🟢 Confirmed Exoplanet
+        <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-400/30">
+          ✅ Confirmed Exoplanet
         </Badge>
       );
     }
 
     if (planet.prediction === 'false-positive') {
       return (
-        <Badge variant="outline" className="border-red-400/50 text-red-400 bg-red-400/10">
-          🔴 False Positive
+        <Badge variant="secondary" className="bg-red-500/20 text-red-300 border-red-400/30">
+          ❌ False Positive
         </Badge>
       );
     }
 
     if (planet.prediction === 'candidate') {
       return (
-        <Badge variant="outline" className="border-yellow-400/50 text-yellow-400 bg-yellow-400/10">
-          🟡 Candidate
+        <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-300 border-yellow-400/30">
+          🟡 Planet Candidate
         </Badge>
       );
     }
 
     return (
-      <Badge variant="outline" className="border-gray-400/50 text-gray-400 bg-gray-400/10">
-        ⚪ Unanalyzed
+      <Badge variant="secondary" className="bg-gray-500/20 text-gray-300 border-gray-400/30">
+        ⏳ Awaiting Analysis
       </Badge>
     );
   };
@@ -406,15 +424,15 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
           <CardHeader className="relative pb-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg border border-blue-400/30">
-                  <Globe className="h-5 w-5 text-blue-300" />
+                <div className="p-2 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-lg border border-orange-400/30">
+                  <Globe className="h-5 w-5 text-orange-300" />
                 </div>
                 <div>
                   <CardTitle className="text-xl text-white font-bold">
                     {planet.id}
                   </CardTitle>
                   <CardDescription className="text-gray-400 text-sm">
-                    K2 Exoplanet Analysis Panel
+                    K2 Mission Analysis
                   </CardDescription>
                 </div>
               </div>
@@ -449,7 +467,7 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
                       htmlFor={param.key} 
                       className="text-sm font-medium text-gray-300 flex items-center gap-2 group-hover:text-white transition-colors"
                     >
-                      <span className="text-blue-400">{param.icon}</span>
+                      <span className="text-orange-400">{param.icon}</span>
                       {param.label}
                     </Label>
                     <div className="text-xs text-gray-400 font-mono">
@@ -476,7 +494,7 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
                       max={param.max}
                       step={param.step}
                       className="h-8 bg-gray-800/60 border-gray-600/50 text-white text-xs
-                        focus:border-blue-400 focus:ring-1 focus:ring-blue-400/20"
+                        focus:border-orange-400 focus:ring-1 focus:ring-orange-400/20"
                     />
                   </div>
 
@@ -491,220 +509,118 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
               ))}
             </div>
 
-            {/* Analysis Buttons */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.6 }}
-              className="pt-4 border-t border-gray-700/50 space-y-3"
-            >
-              {/* Claude AI Analysis Button */}
+            {/* Analysis Actions */}
+            <div className="space-y-3">
               <Button
-                onClick={handleAnalyze}
+                onClick={() => {
+                  onUpdate({ isAnalyzing: true });
+                  handleAnalyze();
+                }}
                 disabled={planet.isAnalyzing}
-                className="w-full bg-gradient-to-r from-blue-600 via-blue-700 to-purple-700 
-                  hover:from-blue-700 hover:via-blue-800 hover:to-purple-800 
-                  text-white h-12 font-semibold shadow-2xl shadow-blue-600/30 
-                  transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed
-                  border border-blue-500/30 hover:border-blue-400/50"
+                className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 
+                  text-white font-medium py-2.5 rounded-lg transition-all duration-200 
+                  disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
               >
                 {planet.isAnalyzing ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                    <span className="animate-pulse">Claude AI Analyzing...</span>
-                  </>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Analyzing with Claude AI...</span>
+                  </div>
                 ) : (
-                  <>
-                    <Zap className="h-4 w-4 mr-2" />
-                    Analyze with Claude AI
-                  </>
+                  <div className="flex items-center justify-center gap-2">
+                    <Zap className="h-4 w-4" />
+                    <span>Analyze with Claude AI</span>
+                  </div>
                 )}
               </Button>
 
-              {/* Flask ML Model Button */}
               <Button
                 onClick={handleFlaskAnalyze}
                 disabled={planet.isAnalyzing}
                 variant="outline"
-                className="w-full bg-gradient-to-r from-green-600 via-green-700 to-emerald-700 
-                  hover:from-green-700 hover:via-green-800 hover:to-emerald-800 
-                  text-white h-12 font-semibold shadow-2xl shadow-green-600/30 
-                  transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed
-                  border border-green-500/30 hover:border-green-400/50"
+                className="w-full border-orange-500/30 text-orange-300 hover:bg-orange-500/10 
+                  hover:border-orange-400/50 font-medium py-2.5 rounded-lg transition-all duration-200
+                  disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {planet.isAnalyzing ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                    <span className="animate-pulse">ML Model Analyzing...</span>
-                  </>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-orange-300/30 border-t-orange-300 rounded-full animate-spin" />
+                    <span>Processing with ML Model...</span>
+                  </div>
                 ) : (
-                  <>
-                    <Activity className="h-4 w-4 mr-2" />
-                    Analyze with ML Model
-                  </>
+                  <div className="flex items-center justify-center gap-2">
+                    <Activity className="h-4 w-4" />
+                    <span>Analyze with ML Model</span>
+                  </div>
                 )}
               </Button>
+            </div>
 
-              {/* Info Text */}
-              <div className="text-xs text-gray-500 text-center space-y-1">
-                <p>🤖 <strong>Claude AI:</strong> Advanced reasoning & scientific analysis</p>
-                <p>⚡ <strong>ML Model:</strong> Trained on K2 dataset patterns</p>
-              </div>
-            </motion.div>
-
-            {/* Planet Stats Summary */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 }}
-              className="bg-gradient-to-br from-gray-800/60 to-gray-900/40 rounded-xl p-4 border border-gray-700/50"
-            >
-              <h4 className="text-sm font-semibold text-white mb-3">Quick Stats</h4>
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div>
-                  <div className="text-gray-400">Habitability</div>
-                  <div className="text-blue-300 font-medium">
-                    {formData.pl_eqt > 200 && formData.pl_eqt < 350 ? 'Potential' : 'Unlikely'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-gray-400">Size Class</div>
-                  <div className="text-blue-300 font-medium">
-                    {formData.pl_rade < 1.25 ? 'Earth-like' : 
-                     formData.pl_rade < 2 ? 'Super-Earth' : 'Gas Giant'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-gray-400">Orbit Type</div>
-                  <div className="text-blue-300 font-medium">
-                    {formData.pl_orbper < 100 ? 'Hot' : 
-                     formData.pl_orbper < 500 ? 'Warm' : 'Cold'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-gray-400">Detection</div>
-                  <div className="text-blue-300 font-medium">
-                    {formData.pl_dens > 3 ? 'Strong' : 
-                     formData.pl_dens > 1 ? 'Moderate' : 'Weak'}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Analysis Results */}
-            {(planet.claudeResponse || planet.flaskResponse) && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.0 }}
-                className="space-y-4"
-              >
-                {/* Claude AI Results */}
+          {/* Analysis Results */}
+          {(planet.claudeResponse || planet.flaskResponse) && (
+            <Card className="bg-gray-800/50 border-gray-700/50">
+              <CardHeader>
+                <CardTitle className="text-sm text-gray-300">Analysis Results</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 {planet.claudeResponse && (
-                  <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 rounded-xl p-4 border border-blue-700/50">
-                    <div className="flex items-center gap-2 mb-3">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
                       <Zap className="h-4 w-4 text-blue-400" />
-                      <h4 className="text-sm font-semibold text-blue-300">Claude AI Analysis</h4>
+                      <span className="text-sm font-medium text-blue-300">Claude AI Analysis</span>
                     </div>
-                    <div className="space-y-2 text-xs">
+                    <div className="pl-6 space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-400">Disposition:</span>
-                        <span className="text-blue-300 font-medium">{planet.claudeResponse.disposition}</span>
+                        <span className="text-blue-300">{planet.claudeResponse.disposition}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Confidence:</span>
-                        <span className="text-blue-300 font-medium">{planet.claudeResponse.confidence}%</span>
+                        <span className="text-blue-300">{planet.claudeResponse.confidence}%</span>
                       </div>
                       {planet.claudeResponse.planet_type && (
                         <div className="flex justify-between">
-                          <span className="text-gray-400">Planet Type:</span>
-                          <span className="text-blue-300 font-medium">{planet.claudeResponse.planet_type}</span>
+                          <span className="text-gray-400">Type:</span>
+                          <span className="text-blue-300">{planet.claudeResponse.planet_type}</span>
                         </div>
                       )}
-                      {planet.claudeResponse.habitability_assessment && (
+                      {planet.claudeResponse.reasoning && (
                         <div className="mt-2">
-                          <span className="text-gray-400 text-xs">Habitability:</span>
-                          <p className="text-blue-300 text-xs mt-1 leading-relaxed">
-                            {planet.claudeResponse.habitability_assessment}
+                          <span className="text-gray-400 text-xs">Reasoning:</span>
+                          <p className="text-blue-200 text-xs mt-1 p-2 bg-blue-900/20 rounded border border-blue-800/30">
+                            {planet.claudeResponse.reasoning}
                           </p>
                         </div>
                       )}
-                      <div className="mt-2">
-                        <span className="text-gray-400 text-xs">Reasoning:</span>
-                        <p className="text-blue-300 text-xs mt-1 leading-relaxed">
-                          {planet.claudeResponse.reasoning}
-                        </p>
-                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* Flask ML Results */}
                 {planet.flaskResponse && (
-                  <div className="bg-gradient-to-br from-green-900/40 to-emerald-900/40 rounded-xl p-4 border border-green-700/50">
-                    <div className="flex items-center gap-2 mb-3">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
                       <Activity className="h-4 w-4 text-green-400" />
-                      <h4 className="text-sm font-semibold text-green-300">ML Model Results</h4>
+                      <span className="text-sm font-medium text-green-300">ML Model Analysis</span>
                     </div>
-                    <div className="space-y-2 text-xs">
+                    <div className="pl-6 space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Prediction:</span>
-                        <span className="text-green-300 font-medium">{planet.flaskResponse.prediction}</span>
+                        <span className="text-gray-400">Disposition:</span>
+                        <span className="text-green-300">{planet.flaskResponse.archive_disposition}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Planet Type:</span>
+                        <span className="text-green-300">{planet.flaskResponse.planet_type}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Probability:</span>
-                        <span className="text-green-300 font-medium">{(planet.flaskResponse.probability * 100).toFixed(1)}%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">KOI Disposition:</span>
-                        <span className="text-green-300 font-medium">{planet.flaskResponse.koi_pdisposition}</span>
-                      </div>
-                      {planet.flaskResponse.is_exoplanet !== undefined && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Is Exoplanet:</span>
-                          <span className="text-green-300 font-medium">{planet.flaskResponse.is_exoplanet ? 'Yes' : 'No'}</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Timestamp:</span>
-                        <span className="text-green-300 font-medium text-xs">
-                          {new Date(planet.flaskResponse.timestamp).toLocaleTimeString()}
-                        </span>
+                        <span className="text-green-300">{(planet.flaskResponse.probability * 100).toFixed(1)}%</span>
                       </div>
                     </div>
                   </div>
                 )}
-
-                {/* Comparison Summary */}
-                {planet.claudeResponse && planet.flaskResponse && (
-                  <div className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-xl p-4 border border-gray-600/50">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Globe className="h-4 w-4 text-yellow-400" />
-                      <h4 className="text-sm font-semibold text-yellow-300">Analysis Comparison</h4>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 text-xs">
-                      <div>
-                        <div className="text-gray-400">Claude AI</div>
-                        <div className="text-blue-300 font-medium">
-                          {planet.claudeResponse.disposition} ({planet.claudeResponse.confidence}%)
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-gray-400">ML Model</div>
-                        <div className="text-green-300 font-medium">
-                          {planet.flaskResponse.koi_pdisposition} ({(planet.flaskResponse.probability * 100).toFixed(0)}%)
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-2 text-xs text-gray-400 text-center">
-                      {planet.claudeResponse.disposition.toLowerCase() === planet.flaskResponse.koi_pdisposition.toLowerCase() 
-                        ? '✅ Both models agree' 
-                        : '⚠️ Models disagree - further analysis recommended'}
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            )}
+              </CardContent>
+            </Card>
+          )}
           </CardContent>
         </Card>
       </div>
