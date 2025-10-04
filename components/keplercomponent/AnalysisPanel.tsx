@@ -189,7 +189,7 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
 
   const handleAnalyze = async () => {
     try {
-      const response = await fetch('/api/predict', {
+      const response = await fetch('/api/predict-keppler', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
