@@ -101,7 +101,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 - **Lucide React**: Beautiful icons
 
 ## Claude AI Integration
-
+i used claude very good
 The application uses Claude 3.5 Sonnet via AWS Bedrock to analyze exoplanet data. Claude provides:
 
 - **Intelligent Analysis**: Contextual understanding of astronomical parameters
