@@ -26,111 +26,136 @@ function validateAWSCredentials(): boolean {
 const modelId = "us.anthropic.claude-3-5-sonnet-20241022-v2:0";
 
 export async function POST(request: NextRequest) {
-  console.log("Starting K2 exoplanet analysis with Claude AI");
+  console.log("🚀 Starting TESS exoplanet analysis with Claude AI");
+  
   try {
     const data = await request.json();
     
+    
     // Validate AWS credentials first
     if (!validateAWSCredentials()) {
-      console.log('AWS credentials not configured');
+      console.log('❌ AWS credentials not configured');
       return NextResponse.json(
         { 
           error: 'AWS credentials not configured. Please set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_REGION environment variables.',
-          success: false 
+          success: false,
+          debug: {
+            hasAccessKey: !!(process.env.AWS_ACCESS_KEY_ID || process.env.NEXT_AWS_ACCESS_KEY_ID),
+            hasSecretKey: !!(process.env.AWS_SECRET_ACCESS_KEY || process.env.NEXT_AWS_SECRET_ACCESS_KEY),
+            hasRegion: !!(process.env.AWS_REGION || process.env.NEXT_AWS_REGION),
+          }
         },
         { status: 500 }
       );
     }
     
-    // Extract the K2 planet parameters
+    // Extract the TESS planet parameters
     const {
       pl_orbper,
+      pl_trandurh,
       pl_trandep,
-      pl_trandur,
-      pl_imppar,
       pl_rade,
-      pl_massj,
-      pl_dens,
       pl_insol,
       pl_eqt,
       st_teff,
-      st_rad,
-      st_mass,
       st_logg,
+      st_rad,
+      st_tmag,
+      st_dist,
       ra,
-      dec,
-      sy_dist
+      dec
     } = data;
 
-    // Create comprehensive prompt for Claude AI specialized for K2 mission
-    const prompt = `You are an expert exoplanet astronomer analyzing K2 mission data. The K2 mission was the extended mission of the Kepler Space Telescope, observing different star fields for shorter periods. Please analyze the following K2 exoplanet parameters and provide a scientific assessment.
+    // Validate required parameters
+    const requiredParams = [
+      'pl_orbper', 'pl_trandurh', 'pl_trandep', 'pl_rade', 
+      'pl_insol', 'pl_eqt', 'st_teff', 'st_logg', 'st_rad', 
+      'st_tmag', 'st_dist', 'ra', 'dec'
+    ];
+    
+    const missingParams = requiredParams.filter(param => data[param] === undefined || data[param] === null);
+    if (missingParams.length > 0) {
+      console.log('Missing required parameters:', missingParams);
+      return NextResponse.json(
+        { 
+          error: `Missing required parameters: ${missingParams.join(', ')}`,
+          success: false 
+        },
+        { status: 400 }
+      );
+    }
 
-K2 EXOPLANET PARAMETERS:
+
+    // Create comprehensive prompt for Claude AI specialized for TESS mission
+    const prompt = `You are an expert exoplanet astronomer analyzing TESS (Transiting Exoplanet Survey Satellite) mission data. TESS conducts an all-sky survey observing different sectors for ~27 days each, optimized for detecting short-period transiting planets around nearby bright stars. Please analyze the following TESS exoplanet parameters and provide a scientific assessment.
+
+TESS EXOPLANET PARAMETERS:
 - Orbital Period: ${pl_orbper} days
+- Transit Duration: ${pl_trandurh} hours
 - Transit Depth: ${pl_trandep} (fraction of stellar flux blocked)
-- Transit Duration: ${pl_trandur} hours
-- Impact Parameter: ${pl_imppar} (0 = central transit, >1.0 = grazing)
 - Planet Radius: ${pl_rade} Earth radii
-- Planet Mass: ${pl_massj} Jupiter masses
-- Planet Density: ${pl_dens} g/cm³
-- Insolation: ${pl_insol} Earth flux units
+- Incident Stellar Flux: ${pl_insol} Earth flux units
 - Equilibrium Temperature: ${pl_eqt} K
 - Stellar Effective Temperature: ${st_teff} K
-- Stellar Radius: ${st_rad} Solar radii
-- Stellar Mass: ${st_mass} Solar masses
 - Stellar Surface Gravity: ${st_logg} log(cm/s²)
+- Stellar Radius: ${st_rad} Solar radii
+- TESS Magnitude: ${st_tmag} mag
+- System Distance: ${st_dist} parsecs
 - Right Ascension: ${ra} degrees
 - Declination: ${dec} degrees
-- System Distance: ${sy_dist} parsecs
 
-K2 MISSION CONTEXT:
-- K2 observed different star fields for ~80 days each
-- Shorter observation periods compared to original Kepler mission
-- Focus on brighter stars and diverse stellar populations
-- Less precise photometry due to spacecraft pointing issues
-- Transit signals need higher confidence thresholds
+TESS MISSION CONTEXT:
+- All-sky survey with 27-day observation periods per sector
+- Optimized for nearby bright stars (TESS magnitude < 15)
+- Focus on short-period planets (P < 50 days) for high detection efficiency
+- Excellent photometric precision for bright stars
+- Two-minute cadence for priority targets, 30-minute for full frame images
+- Primary mission covers 85% of the sky
 
-ANALYSIS CRITERIA FOR K2:
-1. Transit Quality: Depth > 0.0001 and Duration 1-12 hours indicates genuine transit
-2. Planetary Size: 0.5-4.0 Earth radii suggests rocky to sub-Neptune planets (>20 R⊕ indicates stellar contamination)
-3. Physical Consistency: Density 0.5-15 g/cm³ indicates realistic planetary composition
-4. Orbital Stability: Period 0.5-500 days for stable orbits around main sequence stars
-5. Temperature Range: 100-2000K covers full range from frozen to ultra-hot planets
-6. Stellar Properties: Host star parameters should be consistent with main sequence evolution
-7. Signal Geometry: Impact parameter < 1.2 indicates observable transit geometry
-8. System Distance: <1000 pc indicates reliable stellar parameter measurements
+ANALYSIS CRITERIA FOR TESS:
+1. Detection Quality: Transit depth > 0.0001 and duration 0.5-12 hours indicates genuine transit
+2. Stellar Brightness: TESS magnitude < 12 indicates excellent photometric precision
+3. Planetary Size: 0.5-4.0 Earth radii suggests rocky to sub-Neptune planets (>20 R⊕ suggests contamination)
+4. Orbital Characteristics: Period 0.5-100 days optimal for TESS detection
+5. Temperature Range: 100-3000K covers full range from frozen to ultra-hot planets
+6. Physical Consistency: Stellar parameters consistent with main sequence evolution
+7. Signal Quality: Short periods with deep transits favor reliable detection
+8. System Distance: <200 pc ideal for follow-up observations and mass measurements
 
 HABITABILITY ASSESSMENT:
-- Potentially Habitable: 200-350K equilibrium temperature, 0.8-1.5 Earth radii, rocky composition
-- Temperate Zone: 150-400K with consideration for atmospheric greenhouse effects
-- Hot Zone: >400K, likely too hot for liquid water
-- Cold Zone: <150K, likely frozen without substantial atmosphere
+- Potentially Habitable: 200-350K equilibrium temperature, 0.8-1.5 Earth radii, temperate zone
+- Warm Zone: 350-600K, possibly habitable with right atmospheric conditions
+- Hot Zone: 600-1500K, too hot for conventional liquid water
+- Ultra-Hot: >1500K, likely tidally locked with extreme day-night temperature contrast
+- Cold Zone: <200K, frozen without substantial greenhouse atmosphere
 
 PLANET TYPE CLASSIFICATION:
-- Earth-like: 0.8-1.25 R⊕, 0.5-2.0 M⊕, rocky composition
-- Super-Earth: 1.25-2.0 R⊕, 2.0-10.0 M⊕, likely rocky with thick atmosphere
-- Sub-Neptune: 2.0-4.0 R⊕, 5.0-20.0 M⊕, substantial H/He envelope
-- Gas Giant: >4.0 R⊕, >20.0 M⊕, dominated by gas envelope
+- Earth-like: 0.8-1.25 R⊕, rocky composition, potentially habitable
+- Super-Earth: 1.25-2.0 R⊕, likely rocky with thick atmosphere
+- Sub-Neptune: 2.0-4.0 R⊕, substantial H/He envelope, mini gas giant
+- Neptune-size: 4.0-8.0 R⊕, ice giant or gas giant
+- Jupiter-size: >8.0 R⊕, gas giant with extensive atmosphere
 
 REQUIRED OUTPUT FORMAT (respond with EXACTLY this JSON structure):
 {
   "disposition": "CONFIRMED" | "CANDIDATE" | "FALSE POSITIVE",
   "confidence": [number between 0.0 and 1.0],
-  "reasoning": "[detailed scientific explanation of the analysis]",
+  "reasoning": "[detailed scientific explanation of the TESS analysis]",
   "habitability_assessment": "[assessment of potential for liquid water and habitability]",
-  "planet_type": "[classification: Earth-like, Super-Earth, Sub-Neptune, or Gas Giant]"
+  "planet_type": "[classification: Earth-like, Super-Earth, Sub-Neptune, Neptune-size, or Jupiter-size]"
 }
 
-Consider K2-specific challenges such as:
-- Shorter observation baseline requiring higher transit significance
-- Systematic noise from spacecraft pointing drift
-- Need for follow-up observations for mass measurements
-- Potential false positives from stellar activity or instrumental artifacts
-- Background eclipsing binaries in the larger photometric apertures
+Consider TESS-specific factors such as:
+- Short observation baseline requiring strong transit signals
+- Contamination from nearby stars in large TESS pixels
+- Systematic noise from scattered light and instrumental effects
+- Need for ground-based follow-up for orbital confirmation
+- Potential false positives from stellar activity, binary stars, or background eclipsing binaries
+- TESS magnitude limits affecting photometric precision
 
-Based on your scientific analysis of these K2 mission parameters, what is your assessment?`;
+Based on your scientific analysis of these TESS mission parameters, what is your assessment?`;
 
-    console.log('Sending K2 exoplanet data to Claude for analysis...');
+    console.log('🤖 Sending TESS exoplanet data to Claude for analysis...');
 
     const command = new ConverseCommand({
       modelId: modelId,
@@ -141,14 +166,19 @@ Based on your scientific analysis of these K2 mission parameters, what is your a
       },
     });
 
+    console.log('📡 Calling AWS Bedrock...');
     const response = await client.send(command);
+    console.log('✅ Received response from AWS Bedrock');
+    
     const responseText = response.output?.message?.content?.[0]?.text;
     
     if (!responseText) {
+      console.log('❌ No response text from Claude');
       throw new Error('No response from Claude');
     }
 
-    console.log('Claude AI K2 Analysis:', responseText);
+    console.log('🧠 Claude AI TESS Analysis response length:', responseText.length);
+    console.log('📝 Claude response preview:', responseText.substring(0, 200) + '...');
 
     try {
       // Parse Claude's JSON response
@@ -174,25 +204,22 @@ Based on your scientific analysis of these K2 mission parameters, what is your a
         reasoning: analysisResult.reasoning,
         habitability_assessment: analysisResult.habitability_assessment || 'Not assessed',
         planet_type: analysisResult.planet_type || 'Unknown',
-        mission: 'K2',
+        mission: 'TESS',
         ai_analysis: true,
         parameters_analyzed: {
           pl_orbper,
+          pl_trandurh,
           pl_trandep,
-          pl_trandur,
-          pl_imppar,
           pl_rade,
-          pl_massj,
-          pl_dens,
           pl_insol,
           pl_eqt,
           st_teff,
-          st_rad,
-          st_mass,
           st_logg,
+          st_rad,
+          st_tmag,
+          st_dist,
           ra,
-          dec,
-          sy_dist
+          dec
         }
       });
 
@@ -208,32 +235,29 @@ Based on your scientific analysis of these K2 mission parameters, what is your a
         disposition,
         confidence: 0.5,
         reasoning: responseText,
-        mission: 'K2',
+        mission: 'TESS',
         ai_analysis: true,
         parse_error: true,
         parameters_analyzed: {
           pl_orbper,
+          pl_trandurh,
           pl_trandep,
-          pl_trandur,
-          pl_imppar,
           pl_rade,
-          pl_massj,
-          pl_dens,
           pl_insol,
           pl_eqt,
           st_teff,
-          st_rad,
-          st_mass,
           st_logg,
+          st_rad,
+          st_tmag,
+          st_dist,
           ra,
-          dec,
-          sy_dist
+          dec
         }
       });
     }
 
   } catch (error) {
-    console.error('Error in K2 exoplanet prediction API:', error);
+    console.error('Error in TESS exoplanet prediction API:', error);
     
     // Check if it's an AWS credentials error
     if (error instanceof Error && error.message.includes('credential')) {
@@ -259,7 +283,7 @@ Based on your scientific analysis of these K2 mission parameters, what is your a
     
     return NextResponse.json(
       { 
-        error: error instanceof Error ? error.message : 'Failed to get K2 prediction from Claude AI',
+        error: error instanceof Error ? error.message : 'Failed to get TESS prediction from Claude AI',
         success: false 
       },
       { status: 500 }

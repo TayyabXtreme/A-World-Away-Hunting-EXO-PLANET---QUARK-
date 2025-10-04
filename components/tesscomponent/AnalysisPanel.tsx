@@ -181,13 +181,12 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
     try {
       onUpdate({ isAnalyzing: true });
 
-      const response = await fetch('/api/claude-predict', {
+      const response = await fetch('/api/predict-tess', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          dataset: 'tess',
           pl_orbper: formData.pl_orbper,
           pl_trandurh: formData.pl_trandurh,
           pl_trandep: formData.pl_trandep,
@@ -236,6 +235,10 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
     } catch (error) {
       console.error('Analysis failed:', error);
       onUpdate({ isAnalyzing: false });
+      
+      // Show specific error message to user
+      const errorMessage = error instanceof Error ? error.message : 'TESS analysis failed. Please check your AWS credentials and try again.';
+      alert(`Claude AI Analysis Error: ${errorMessage}`);
     }
   };
 

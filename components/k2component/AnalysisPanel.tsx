@@ -252,7 +252,10 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPa
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || `HTTP error! status: ${response.status}`;
+        console.error('Claude API Error:', errorMessage);
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
@@ -283,6 +286,10 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPa
     } catch (error) {
       console.error('Analysis failed:', error);
       onUpdate({ isAnalyzing: false });
+      
+      // Show specific error message to user
+      const errorMessage = error instanceof Error ? error.message : 'Analysis failed';
+      alert(`Claude AI Analysis Error: ${errorMessage}`);
     }
   };
 
