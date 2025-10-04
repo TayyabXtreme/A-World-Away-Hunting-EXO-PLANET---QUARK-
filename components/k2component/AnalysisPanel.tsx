@@ -226,13 +226,12 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPa
     try {
       onUpdate({ isAnalyzing: true });
 
-      const response = await fetch('/api/claude-predict', {
+      const response = await fetch('/api/predict-k2', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          dataset: 'k2',
           pl_orbper: formData.pl_orbper,
           pl_trandep: formData.pl_trandep,
           pl_trandur: formData.pl_trandur,
