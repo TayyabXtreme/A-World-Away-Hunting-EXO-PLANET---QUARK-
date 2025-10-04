@@ -34,33 +34,39 @@ export async function POST(request: NextRequest) {
       koi_insol,
       koi_steff,
       koi_slogg,
-      koi_srad
+      koi_srad,
+      koi_model_snr,
+      koi_srho
     } = data;
 
     // Create comprehensive prompt for Claude AI
     const prompt = `You are an expert exoplanet astronomer analyzing Kepler Objects of Interest (KOI) data. Please analyze the following exoplanet parameters and provide a scientific assessment.
 
 EXOPLANET PARAMETERS:
-- KOI Score (Detection Confidence): ${koi_score}
+- KOI Score (Detection Confidence): ${koi_score} (0.0 = False Positive, 1.0 = Confirmed)
 - Orbital Period: ${koi_period} days
-- Transit Epoch (BJD): ${koi_time0bk}
-- Impact Parameter: ${koi_impact}
+- Transit Epoch (BKJD): ${koi_time0bk} days
+- Impact Parameter: ${koi_impact} (0 = central, >1.0 = grazing)
 - Transit Duration: ${koi_duration} hours
-- Transit Depth: ${koi_depth} ppm
-- Planet Radius: ${koi_prad} Earth radii
+- Transit Depth: ${koi_depth} ppm (parts per million)
+- Planet Radius: ${koi_prad} Earth radii (>20 often indicates Eclipsing Binaries)
 - Equilibrium Temperature: ${koi_teq} K
 - Insolation: ${koi_insol} Earth flux
 - Stellar Effective Temperature: ${koi_steff} K
 - Stellar Surface Gravity: ${koi_slogg} log(cm/s²)
 - Stellar Radius: ${koi_srad} Solar radii
+- Model Signal-to-Noise Ratio: ${koi_model_snr} (<10 often too low for confidence)
+- Stellar Density: ${koi_srho} Solar density
 
 ANALYSIS CRITERIA:
 1. Detection Quality: KOI Score > 0.7 indicates high confidence
-2. Orbital Characteristics: Period between 10-400 days suggests potentially habitable zone
-3. Planet Size: 0.5-2.5 Earth radii indicates rocky to super-Earth planets
-4. Temperature: 200-350K suggests potential habitability
-5. Transit Geometry: Impact parameter < 0.5 indicates favorable transit
-6. Host Star: 5000-6500K stellar temperature indicates Sun-like star
+2. Signal Strength: Model SNR > 10 indicates reliable detection
+3. Orbital Characteristics: Period between 10-400 days suggests potentially habitable zone
+4. Planet Size: 0.5-2.5 Earth radii indicates rocky to super-Earth planets (>20 suggests Eclipsing Binary)
+5. Temperature: 200-350K suggests potential habitability
+6. Transit Geometry: Impact parameter < 0.5 indicates favorable central transit
+7. Host Star: 5000-6500K stellar temperature indicates Sun-like star
+8. Physical Consistency: Stellar density should be consistent with transit parameters
 
 REQUIRED OUTPUT FORMAT (respond with EXACTLY this JSON structure):
 {
@@ -130,7 +136,9 @@ Based on the scientific analysis of these parameters, what is your assessment? C
           koi_insol,
           koi_steff,
           koi_slogg,
-          koi_srad
+          koi_srad,
+          koi_model_snr,
+          koi_srho
         }
       });
 
@@ -160,7 +168,9 @@ Based on the scientific analysis of these parameters, what is your assessment? C
           koi_insol,
           koi_steff,
           koi_slogg,
-          koi_srad
+          koi_srad,
+          koi_model_snr,
+          koi_srho
         }
       });
     }

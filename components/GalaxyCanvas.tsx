@@ -597,7 +597,7 @@ function GalaxyScene() {
     actions.selectStarSystem(system);
   }, [actions]);
 
-  const handlePlanetClick = useCallback((planet: Planet, starSystem: StarSystem, event?: any) => {
+  const handlePlanetClick = useCallback((planet: Planet, starSystem: StarSystem, event?: React.MouseEvent) => {
     if (event?.ctrlKey || event?.metaKey) {
       actions.toggleMultiSelect(planet);
     } else {

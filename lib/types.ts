@@ -10,7 +10,7 @@ export interface StarProperties {
 }
 
 export interface Planet {
-  pl_name: any;
+  pl_name: string;
   pl_rade: number;
   planet_name: string;
   orbital_period_days: number;
@@ -56,7 +56,7 @@ export interface CameraPreset {
 }
 
 export interface AppState {
-  actions: any;
+  actions: Record<string, (...args: unknown[]) => unknown>;
   selectedStar: StarSystem | null;
   selectedPlanet: Planet | null;
   selectedStarSystem: StarSystem | null;

@@ -8,33 +8,32 @@ import Star from './Star';
 import Planet from './Planet';
 import AnalysisPanel from './AnalysisPanel';
 
-export interface PlanetData {
+export interface TessPlanetData {
   id: string;
   position: [number, number, number];
   color: string;
   size: number;
   orbitRadius: number;
   speed: number;
-  koi_score: number;
-  koi_period: number;
-  koi_time0bk: number;
-  koi_impact: number;
-  koi_duration: number;
-  koi_depth: number;
-  koi_prad: number;
-  koi_teq: number;
-  koi_insol: number;
-  koi_steff: number;
-  koi_slogg: number;
-  koi_srad: number;
-  // Additional parameters
-  koi_model_snr: number;
-  koi_srho: number;
+  // TESS-specific parameters (matching TESS_SELECTED_FEATURES)
+  pl_orbper: number;      // Orbital Period (days)
+  pl_trandurh: number;    // Transit Duration (hours)
+  pl_trandep: number;     // Transit Depth (fraction)
+  pl_rade: number;        // Planet Radius (Earth radii)
+  pl_insol: number;       // Incident Stellar Flux
+  pl_eqt: number;         // Equilibrium Temperature (K)
+  st_teff: number;        // Stellar Temperature (K)
+  st_logg: number;        // Stellar Surface Gravity
+  st_rad: number;         // Stellar Radius (Solar radii)
+  st_tmag: number;        // TESS Magnitude
+  st_dist: number;        // System Distance (parsecs)
+  ra: number;             // Right Ascension (degrees)
+  dec: number;            // Declination (degrees)
   prediction?: 'confirmed' | 'false-positive' | 'candidate' | null;
   isAnalyzing?: boolean;
   // Flask API response data
   flaskResponse?: {
-    koi_pdisposition: string;
+    tess_disposition: string;
     prediction: string;
     probability: number;
     status: string;
@@ -51,148 +50,142 @@ export interface PlanetData {
   };
 }
 
-const initialPlanets: PlanetData[] = [
+const initialPlanets: TessPlanetData[] = [
   {
-    id: 'Kepler-442b',
+    id: 'TOI-715b',
     position: [12, 0, 0],
     color: '#4299E1',
     size: 0.8,
     orbitRadius: 12,
     speed: 0.003,
-    koi_score: 0.95,
-    koi_period: 112.3,
-    koi_time0bk: 131.5100,
-    koi_impact: 0.15,
-    koi_duration: 4.2,
-    koi_depth: 320,
-    koi_prad: 1.34,
-    koi_teq: 233,
-    koi_insol: 0.7,
-    koi_steff: 4402,
-    koi_slogg: 4.58,
-    koi_srad: 0.6,
-    koi_model_snr: 85.2,
-    koi_srho: 2.1,
+    pl_orbper: 19.3,
+    pl_trandurh: 2.1,
+    pl_trandep: 0.00089,
+    pl_rade: 1.55,
+    pl_insol: 1.37,
+    pl_eqt: 374,
+    st_teff: 3341,
+    st_logg: 4.75,
+    st_rad: 0.374,
+    st_tmag: 9.2,
+    st_dist: 22.2,
+    ra: 145.6,
+    dec: -16.7,
   },
   {
-    id: 'Kepler-186f',
+    id: 'TOI-700e',
     position: [18, 0, 0],
     color: '#48BB78',
     size: 0.7,
     orbitRadius: 18,
     speed: 0.002,
-    koi_score: 0.88,
-    koi_period: 129.9,
-    koi_time0bk: 142.3200,
-    koi_impact: 0.25,
-    koi_duration: 5.8,
-    koi_depth: 180,
-    koi_prad: 1.11,
-    koi_teq: 188,
-    koi_insol: 0.32,
-    koi_steff: 3788,
-    koi_slogg: 4.74,
-    koi_srad: 0.47,
-    koi_model_snr: 64.5,
-    koi_srho: 3.8,
+    pl_orbper: 37.4,
+    pl_trandurh: 3.6,
+    pl_trandep: 0.00034,
+    pl_rade: 0.95,
+    pl_insol: 0.43,
+    pl_eqt: 269,
+    st_teff: 3480,
+    st_logg: 4.8,
+    st_rad: 0.415,
+    st_tmag: 9.8,
+    st_dist: 31.1,
+    ra: 106.3,
+    dec: -65.4,
   },
   {
-    id: 'Kepler-452b',
+    id: 'TOI-849b',
     position: [24, 0, 0],
     color: '#F59E0B',
     size: 0.9,
     orbitRadius: 24,
     speed: 0.0015,
-    koi_score: 0.76,
-    koi_period: 384.8,
-    koi_time0bk: 156.7800,
-    koi_impact: 0.08,
-    koi_duration: 10.8,
-    koi_depth: 150,
-    koi_prad: 1.63,
-    koi_teq: 265,
-    koi_insol: 1.04,
-    koi_steff: 5757,
-    koi_slogg: 4.32,
-    koi_srad: 1.11,
-    koi_model_snr: 42.3,
-    koi_srho: 0.98,
+    pl_orbper: 0.765,
+    pl_trandurh: 1.4,
+    pl_trandep: 0.00156,
+    pl_rade: 3.95,
+    pl_insol: 2508,
+    pl_eqt: 1800,
+    st_teff: 5129,
+    st_logg: 4.2,
+    st_rad: 0.75,
+    st_tmag: 8.1,
+    st_dist: 226.5,
+    ra: 258.7,
+    dec: -40.1,
   },
   {
-    id: 'TOI-715b',
+    id: 'TOI-1338b',
     position: [30, 0, 0],
     color: '#EF4444',
     size: 0.75,
     orbitRadius: 30,
     speed: 0.001,
-    koi_score: 0.63,
-    koi_period: 19.3,
-    koi_time0bk: 167.2100,
-    koi_impact: 0.42,
-    koi_duration: 2.1,
-    koi_depth: 890,
-    koi_prad: 1.55,
-    koi_teq: 374,
-    koi_insol: 1.37,
-    koi_steff: 3341,
-    koi_slogg: 4.81,
-    koi_srad: 0.374,
-    koi_model_snr: 27.8,
-    koi_srho: 4.2,
+    pl_orbper: 95.2,
+    pl_trandurh: 6.2,
+    pl_trandep: 0.00124,
+    pl_rade: 6.9,
+    pl_insol: 1.17,
+    pl_eqt: 295,
+    st_teff: 5981,
+    st_logg: 4.1,
+    st_rad: 1.15,
+    st_tmag: 11.5,
+    st_dist: 399.7,
+    ra: 19.7,
+    dec: 42.3,
   },
   {
-    id: 'Proxima-Cen-b',
+    id: 'TOI-2109b',
     position: [9, 0, 0],
     color: '#9F7AEA',
     size: 0.6,
     orbitRadius: 9,
     speed: 0.004,
-    koi_score: 0.82,
-    koi_period: 11.2,
-    koi_time0bk: 125.9900,
-    koi_impact: 0.35,
-    koi_duration: 1.8,
-    koi_depth: 1200,
-    koi_prad: 1.07,
-    koi_teq: 234,
-    koi_insol: 1.64,
-    koi_steff: 3042,
-    koi_slogg: 5.2,
-    koi_srad: 0.14,
-    koi_model_snr: 38.9,
-    koi_srho: 5.6,
+    pl_orbper: 0.672,
+    pl_trandurh: 1.1,
+    pl_trandep: 0.00215,
+    pl_rade: 5.0,
+    pl_insol: 7690,
+    pl_eqt: 2407,
+    st_teff: 6321,
+    st_logg: 3.9,
+    st_rad: 1.7,
+    st_tmag: 10.8,
+    st_dist: 855.3,
+    ra: 352.1,
+    dec: 12.9,
   },
   {
-    id: 'TRAPPIST-1e',
+    id: 'TOI-1452b',
     position: [15, 0, 0],
     color: '#06B6D4',
     size: 0.65,
     orbitRadius: 15,
     speed: 0.0025,
-    koi_score: 0.91,
-    koi_period: 6.1,
-    koi_time0bk: 138.4500,
-    koi_impact: 0.18,
-    koi_duration: 0.8,
-    koi_depth: 740,
-    koi_prad: 0.92,
-    koi_teq: 251,
-    koi_insol: 0.66,
-    koi_steff: 2559,
-    koi_slogg: 5.04,
-    koi_srad: 0.121,
-    koi_model_snr: 56.7,
-    koi_srho: 8.2,
+    pl_orbper: 11.1,
+    pl_trandurh: 2.9,
+    pl_trandep: 0.00087,
+    pl_rade: 1.67,
+    pl_insol: 5.02,
+    pl_eqt: 326,
+    st_teff: 3915,
+    st_logg: 4.9,
+    st_rad: 0.55,
+    st_tmag: 8.9,
+    st_dist: 30.1,
+    ra: 341.4,
+    dec: 15.2,
   },
 ];
 
-export default function KeplerVisualizer() {
-  const [planets, setPlanets] = useState<PlanetData[]>(initialPlanets);
-  const [selectedPlanet, setSelectedPlanet] = useState<PlanetData | null>(null);
+export default function TessVisualizer() {
+  const [planets, setPlanets] = useState<TessPlanetData[]>(initialPlanets);
+  const [selectedPlanet, setSelectedPlanet] = useState<TessPlanetData | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const controlsRef = useRef(null);
 
-  const handlePlanetClick = useCallback((planet: PlanetData) => {
+  const handlePlanetClick = useCallback((planet: TessPlanetData) => {
     setSelectedPlanet(planet);
     setIsPanelOpen(true);
   }, []);
@@ -202,7 +195,7 @@ export default function KeplerVisualizer() {
     setTimeout(() => setSelectedPlanet(null), 300);
   }, []);
 
-  const handleUpdatePlanet = useCallback((updatedData: Partial<PlanetData>) => {
+  const handleUpdatePlanet = useCallback((updatedData: Partial<TessPlanetData>) => {
     if (!selectedPlanet) return;
     
     const updatedPlanets = planets.map(planet =>
@@ -280,14 +273,14 @@ export default function KeplerVisualizer() {
       <div className="absolute top-0 left-0 right-0 z-10 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl border border-blue-400/30 backdrop-blur-sm">
-              <div className="w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse" />
+            <div className="p-3 bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-xl border border-red-400/30 backdrop-blur-sm">
+              <div className="w-6 h-6 bg-gradient-to-r from-red-400 to-orange-500 rounded-full animate-pulse" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white">
-                Kepler Exoplanet Analyzer
+                TESS Exoplanet Explorer
               </h1>
-              <p className="text-blue-300 text-sm">
+              <p className="text-red-300 text-sm">
                 Interactive 3D visualization and classification
               </p>
             </div>
@@ -310,10 +303,10 @@ export default function KeplerVisualizer() {
         <div className="bg-black/40 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 max-w-md">
           <h3 className="text-white font-semibold mb-2">Controls</h3>
           <div className="space-y-1 text-sm text-gray-300">
-            <p>• <span className="text-blue-300">Click</span> planets to analyze</p>
-            <p>• <span className="text-blue-300">Drag</span> to rotate view</p>
-            <p>• <span className="text-blue-300">Scroll</span> to zoom</p>
-            <p>• <span className="text-blue-300">Hover</span> to see orbit paths</p>
+            <p>• <span className="text-red-300">Click</span> planets to analyze</p>
+            <p>• <span className="text-red-300">Drag</span> to rotate view</p>
+            <p>• <span className="text-red-300">Scroll</span> to zoom</p>
+            <p>• <span className="text-red-300">Hover</span> to see orbit paths</p>
           </div>
         </div>
       </div>

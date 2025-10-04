@@ -2,26 +2,26 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, Zap, Activity, Globe, Thermometer, Sun, Orbit } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { X, Activity, Globe, Sun, Thermometer, Zap, Orbit, Satellite } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { PlanetData } from './KeplerVisualizer';
+import { TessPlanetData } from './TessVisualizer';
 
 interface AnalysisPanelProps {
-  planet: PlanetData;
+  planet: TessPlanetData;
   isOpen: boolean;
   onClose: () => void;
-  onUpdate: (data: Partial<PlanetData>) => void;
-  onAnalyze: (planet: PlanetData) => void;
+  onUpdate: (data: Partial<TessPlanetData>) => void;
+  onAnalyze: (planet: TessPlanetData) => void;
 }
 
 interface ParameterConfig {
-  key: keyof PlanetData;
+  key: keyof TessPlanetData;
   label: string;
   icon: React.ReactNode;
   min: number;
@@ -33,155 +33,145 @@ interface ParameterConfig {
 
 const parameters: ParameterConfig[] = [
   {
-    key: 'koi_score',
-    label: 'KOI Score',
-    icon: <Activity className="h-4 w-4" />,
-    min: 0,
-    max: 1,
-    step: 0.01,
-    unit: '',
-    description: 'Detection confidence (0.0 = False Positive, 1.0 = Confirmed)'
-  },
-  {
-    key: 'koi_period',
+    key: 'pl_orbper',
     label: 'Orbital Period',
     icon: <Orbit className="h-4 w-4" />,
-    min: 0.2,
-    max: 1000,
+    min: 0.5,
+    max: 100,
     step: 0.1,
     unit: 'days',
-    description: 'Time to complete one orbit'
+    description: 'Orbital Period. TESS is optimized for shorter periods.'
   },
   {
-    key: 'koi_time0bk',
-    label: 'Transit Epoch',
-    icon: <Sun className="h-4 w-4" />,
-    min: 110,
-    max: 300,
-    step: 0.1,
-    unit: 'BKJD',
-    description: 'Barycenter corrected Julian Date of first transit'
-  },
-  {
-    key: 'koi_impact',
-    label: 'Impact Parameter',
-    icon: <Globe className="h-4 w-4" />,
-    min: 0,
-    max: 1.5,
-    step: 0.01,
-    unit: '',
-    description: 'Transit centrality (0 = central, >1.0 = grazing)'
-  },
-  {
-    key: 'koi_duration',
+    key: 'pl_trandurh',
     label: 'Transit Duration',
     icon: <Activity className="h-4 w-4" />,
     min: 0.5,
     max: 12,
     step: 0.1,
     unit: 'hours',
-    description: 'Time planet is transiting the star'
+    description: 'Transit Duration in hours'
   },
   {
-    key: 'koi_depth',
+    key: 'pl_trandep',
     label: 'Transit Depth',
     icon: <Zap className="h-4 w-4" />,
-    min: 10,
-    max: 100000,
-    step: 10,
-    unit: 'ppm',
-    description: 'Fractional drop in stellar flux'
+    min: 0.00001,
+    max: 0.5,
+    step: 0.00001,
+    unit: 'fraction',
+    description: 'Transit Depth as fraction or ppm'
   },
   {
-    key: 'koi_prad',
+    key: 'pl_rade',
     label: 'Planet Radius',
     icon: <Globe className="h-4 w-4" />,
-    min: 0.1,
-    max: 30,
+    min: 0.5,
+    max: 20.0,
     step: 0.1,
     unit: 'R⊕',
-    description: 'Planet radius (>20 often indicates Eclipsing Binaries)'
+    description: 'Planet Radius in Earth radii'
   },
   {
-    key: 'koi_teq',
+    key: 'pl_insol',
+    label: 'Incident Stellar Flux',
+    icon: <Sun className="h-4 w-4" />,
+    min: 0.1,
+    max: 100000,
+    step: 0.1,
+    unit: 'S⊕',
+    description: 'Incident Stellar Flux received by planet'
+  },
+  {
+    key: 'pl_eqt',
     label: 'Equilibrium Temperature',
     icon: <Thermometer className="h-4 w-4" />,
     min: 100,
     max: 3000,
     step: 1,
     unit: 'K',
-    description: 'Estimated equilibrium temperature of planet'
+    description: 'Planet Equilibrium Temperature'
   },
   {
-    key: 'koi_insol',
-    label: 'Insolation',
-    icon: <Sun className="h-4 w-4" />,
-    min: 0.01,
-    max: 1000000,
-    step: 0.01,
-    unit: 'S⊕',
-    description: 'Incident stellar flux received by planet'
-  },
-  {
-    key: 'koi_steff',
+    key: 'st_teff',
     label: 'Stellar Temperature',
     icon: <Thermometer className="h-4 w-4" />,
     min: 3000,
     max: 7000,
     step: 10,
     unit: 'K',
-    description: 'Effective temperature of host star'
+    description: 'Star\'s Effective Temperature'
   },
   {
-    key: 'koi_slogg',
-    label: 'Stellar Gravity',
+    key: 'st_logg',
+    label: 'Stellar Surface Gravity',
     icon: <Activity className="h-4 w-4" />,
-    min: 3,
-    max: 5,
+    min: 3.0,
+    max: 5.0,
     step: 0.01,
-    unit: 'log(cm/s²)',
-    description: 'Logarithm of star surface gravity'
+    unit: 'log₁₀(cm/s²)',
+    description: 'Star\'s Surface Gravity (logarithmic)'
   },
   {
-    key: 'koi_srad',
+    key: 'st_rad',
     label: 'Stellar Radius',
     icon: <Sun className="h-4 w-4" />,
     min: 0.3,
-    max: 10,
+    max: 10.0,
     step: 0.01,
     unit: 'R☉',
-    description: 'Radius of host star'
+    description: 'Star\'s Radius in Solar radii'
   },
   {
-    key: 'koi_model_snr',
-    label: 'Model SNR',
-    icon: <Activity className="h-4 w-4" />,
-    min: 5,
-    max: 1000,
+    key: 'st_tmag',
+    label: 'TESS Magnitude',
+    icon: <Satellite className="h-4 w-4" />,
+    min: 4.0,
+    max: 18.0,
     step: 0.1,
-    unit: '',
-    description: 'Signal-to-Noise Ratio (<10 often too low for confidence)'
+    unit: 'mag',
+    description: 'TESS Magnitude (brightness in TESS bandpass)'
   },
   {
-    key: 'koi_srho',
-    label: 'Stellar Density',
-    icon: <Activity className="h-4 w-4" />,
-    min: 0.01,
-    max: 10,
-    step: 0.01,
-    unit: 'ρ☉',
-    description: 'Stellar density (checks transit parameter consistency)'
+    key: 'st_dist',
+    label: 'System Distance',
+    icon: <Satellite className="h-4 w-4" />,
+    min: 1,
+    max: 500,
+    step: 0.1,
+    unit: 'pc',
+    description: 'Distance to star system in parsecs'
+  },
+  {
+    key: 'ra',
+    label: 'Right Ascension',
+    icon: <Globe className="h-4 w-4" />,
+    min: 0,
+    max: 360,
+    step: 0.1,
+    unit: '°',
+    description: 'Right Ascension coordinate'
+  },
+  {
+    key: 'dec',
+    label: 'Declination',
+    icon: <Globe className="h-4 w-4" />,
+    min: -90,
+    max: 90,
+    step: 0.1,
+    unit: '°',
+    description: 'Declination coordinate'
   }
 ];
 
-export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPanelProps) {
+export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAnalyze }: AnalysisPanelProps) {
   const [formData, setFormData] = useState(planet);
 
   useEffect(() => {
     setFormData(planet);
   }, [planet]);
 
-  const handleInputChange = (key: keyof PlanetData, value: number) => {
+  const handleInputChange = (key: keyof TessPlanetData, value: number) => {
     const newData = { ...formData, [key]: value };
     setFormData(newData);
     onUpdate({ [key]: value });
@@ -189,31 +179,33 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
 
   const handleAnalyze = async () => {
     try {
-      const response = await fetch('/api/predict', {
+      onUpdate({ isAnalyzing: true });
+
+      const response = await fetch('/api/claude-predict', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          koi_score: formData.koi_score,
-          koi_period: formData.koi_period,
-          koi_time0bk: formData.koi_time0bk,
-          koi_impact: formData.koi_impact,
-          koi_duration: formData.koi_duration,
-          koi_depth: formData.koi_depth,
-          koi_prad: formData.koi_prad,
-          koi_teq: formData.koi_teq,
-          koi_insol: formData.koi_insol,
-          koi_steff: formData.koi_steff,
-          koi_slogg: formData.koi_slogg,
-          koi_srad: formData.koi_srad,
-          koi_model_snr: formData.koi_model_snr,
-          koi_srho: formData.koi_srho,
+          dataset: 'tess',
+          pl_orbper: formData.pl_orbper,
+          pl_trandurh: formData.pl_trandurh,
+          pl_trandep: formData.pl_trandep,
+          pl_rade: formData.pl_rade,
+          pl_insol: formData.pl_insol,
+          pl_eqt: formData.pl_eqt,
+          st_teff: formData.st_teff,
+          st_logg: formData.st_logg,
+          st_rad: formData.st_rad,
+          st_tmag: formData.st_tmag,
+          st_dist: formData.st_dist,
+          ra: formData.ra,
+          dec: formData.dec,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Prediction request failed');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
@@ -254,24 +246,23 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
 
       const payload = {
         features: {
-          koi_score: formData.koi_score,
-          koi_period: formData.koi_period,
-          koi_time0bk: formData.koi_time0bk,
-          koi_impact: formData.koi_impact,
-          koi_duration: formData.koi_duration,
-          koi_depth: formData.koi_depth,
-          koi_prad: formData.koi_prad,
-          koi_teq: formData.koi_teq,
-          koi_insol: formData.koi_insol,
-          koi_steff: formData.koi_steff,
-          koi_slogg: formData.koi_slogg,
-          koi_srad: formData.koi_srad,
-          koi_model_snr: formData.koi_model_snr,
-          koi_srho: formData.koi_srho,
+          pl_orbper: formData.pl_orbper,
+          pl_trandurh: formData.pl_trandurh,
+          pl_trandep: formData.pl_trandep,
+          pl_rade: formData.pl_rade,
+          pl_insol: formData.pl_insol,
+          pl_eqt: formData.pl_eqt,
+          st_teff: formData.st_teff,
+          st_logg: formData.st_logg,
+          st_rad: formData.st_rad,
+          st_tmag: formData.st_tmag,
+          st_dist: formData.st_dist,
+          ra: formData.ra,
+          dec: formData.dec,
         }
       };
 
-      const response = await fetch('http://127.0.0.1:5000/predict/kepler', {
+      const response = await fetch('http://127.0.0.1:5000/predict/tess', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -281,7 +272,7 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
       });
 
       if (!response.ok) {
-        throw new Error(`Flask API request failed: ${response.status}`);
+        throw new Error(`Flask API Error: ${response.status}`);
       }
 
       const result = await response.json();
@@ -290,9 +281,9 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
       // Map Flask API response to our prediction format
       let prediction: 'confirmed' | 'false-positive' | 'candidate';
       
-      // Map based on is_exoplanet and koi_pdisposition from Flask response
+      // Map based on is_exoplanet and tess_disposition from Flask response
       if (result.is_exoplanet === true) {
-        if (result.koi_pdisposition === 'CONFIRMED') {
+        if (result.tess_disposition === 'CP' || result.tess_disposition === 'PC') {
           prediction = 'confirmed';
         } else {
           prediction = 'candidate';
@@ -306,11 +297,11 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
         isAnalyzing: false, 
         prediction: prediction,
         flaskResponse: {
-          koi_pdisposition: result.koi_pdisposition,
-          prediction: result.planet_type, // Use planet_type as prediction
+          tess_disposition: result.tess_disposition,
+          prediction: result.planet_type || result.prediction,
           probability: result.probability,
-          status: 'success', // Default status since not provided
-          timestamp: new Date().toISOString(), // Generate timestamp since not provided
+          status: 'success',
+          timestamp: new Date().toISOString(),
           is_exoplanet: result.is_exoplanet
         }
       });
@@ -327,7 +318,7 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
   const getPredictionBadge = () => {
     if (planet.isAnalyzing) {
       return (
-        <Badge variant="outline" className="border-blue-400/50 text-blue-400 bg-blue-400/10 animate-pulse">
+        <Badge variant="outline" className="bg-red-500/20 border-red-400 text-red-300 animate-pulse">
           🔄 Analyzing...
         </Badge>
       );
@@ -335,31 +326,31 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
 
     if (planet.prediction === 'confirmed') {
       return (
-        <Badge variant="outline" className="border-green-400/50 text-green-400 bg-green-400/10">
-          🟢 Confirmed Exoplanet
+        <Badge variant="outline" className="bg-green-500/20 border-green-400 text-green-300">
+          ✅ Confirmed Exoplanet
         </Badge>
       );
     }
 
     if (planet.prediction === 'false-positive') {
       return (
-        <Badge variant="outline" className="border-red-400/50 text-red-400 bg-red-400/10">
-          🔴 False Positive
+        <Badge variant="outline" className="bg-red-500/20 border-red-400 text-red-300">
+          ❌ False Positive
         </Badge>
       );
     }
 
     if (planet.prediction === 'candidate') {
       return (
-        <Badge variant="outline" className="border-yellow-400/50 text-yellow-400 bg-yellow-400/10">
-          🟡 Candidate
+        <Badge variant="outline" className="bg-yellow-500/20 border-yellow-400 text-yellow-300">
+          🟡 Planet Candidate
         </Badge>
       );
     }
 
     return (
-      <Badge variant="outline" className="border-gray-400/50 text-gray-400 bg-gray-400/10">
-        ⚪ Unanalyzed
+      <Badge variant="outline" className="bg-gray-500/20 border-gray-400 text-gray-300">
+        🔍 Ready for Analysis
       </Badge>
     );
   };
@@ -382,15 +373,15 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
           <CardHeader className="relative pb-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg border border-blue-400/30">
-                  <Globe className="h-5 w-5 text-blue-300" />
+                <div className="p-2 bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-lg border border-red-400/30">
+                  <Satellite className="h-5 w-5 text-red-300" />
                 </div>
                 <div>
                   <CardTitle className="text-xl text-white font-bold">
                     {planet.id}
                   </CardTitle>
                   <CardDescription className="text-gray-400 text-sm">
-                    Exoplanet Analysis Panel
+                    TESS Exoplanet Analysis Panel
                   </CardDescription>
                 </div>
               </div>
@@ -425,7 +416,7 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
                       htmlFor={param.key} 
                       className="text-sm font-medium text-gray-300 flex items-center gap-2 group-hover:text-white transition-colors"
                     >
-                      <span className="text-blue-400">{param.icon}</span>
+                      <span className="text-red-400">{param.icon}</span>
                       {param.label}
                     </Label>
                     <div className="text-xs text-gray-400 font-mono">
@@ -452,7 +443,7 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
                       max={param.max}
                       step={param.step}
                       className="h-8 bg-gray-800/60 border-gray-600/50 text-white text-xs
-                        focus:border-blue-400 focus:ring-1 focus:ring-blue-400/20"
+                        focus:border-red-400 focus:ring-1 focus:ring-red-400/20"
                     />
                   </div>
 
@@ -478,11 +469,11 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
               <Button
                 onClick={handleAnalyze}
                 disabled={planet.isAnalyzing}
-                className="w-full bg-gradient-to-r from-blue-600 via-blue-700 to-purple-700 
-                  hover:from-blue-700 hover:via-blue-800 hover:to-purple-800 
-                  text-white h-12 font-semibold shadow-2xl shadow-blue-600/30 
+                className="w-full bg-gradient-to-r from-red-600 via-red-700 to-orange-700 
+                  hover:from-red-700 hover:via-red-800 hover:to-orange-800 
+                  text-white h-12 font-semibold shadow-2xl shadow-red-600/30 
                   transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed
-                  border border-blue-500/30 hover:border-blue-400/50"
+                  border border-red-500/30 hover:border-red-400/50"
               >
                 {planet.isAnalyzing ? (
                   <>
@@ -502,11 +493,11 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
                 onClick={handleFlaskAnalyze}
                 disabled={planet.isAnalyzing}
                 variant="outline"
-                className="w-full bg-gradient-to-r from-green-600 via-green-700 to-emerald-700 
-                  hover:from-green-700 hover:via-green-800 hover:to-emerald-800 
-                  text-white h-12 font-semibold shadow-2xl shadow-green-600/30 
+                className="w-full bg-gradient-to-r from-orange-600 via-orange-700 to-yellow-700 
+                  hover:from-orange-700 hover:via-orange-800 hover:to-yellow-800 
+                  text-white h-12 font-semibold shadow-2xl shadow-orange-600/30 
                   transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed
-                  border border-green-500/30 hover:border-green-400/50"
+                  border border-orange-500/30 hover:border-orange-400/50"
               >
                 {planet.isAnalyzing ? (
                   <>
@@ -524,7 +515,7 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
               {/* Info Text */}
               <div className="text-xs text-gray-500 text-center space-y-1">
                 <p>🤖 <strong>Claude AI:</strong> Advanced reasoning & scientific analysis</p>
-                <p>⚡ <strong>ML Model:</strong> Trained on Kepler dataset patterns</p>
+                <p>⚡ <strong>ML Model:</strong> Trained on TESS dataset patterns</p>
               </div>
             </motion.div>
 
@@ -539,29 +530,29 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
                   <div className="text-gray-400">Habitability</div>
-                  <div className="text-blue-300 font-medium">
-                    {formData.koi_teq > 200 && formData.koi_teq < 350 ? 'Potential' : 'Unlikely'}
+                  <div className="text-red-300 font-medium">
+                    {formData.pl_eqt > 200 && formData.pl_eqt < 350 ? 'Potential' : 'Unlikely'}
                   </div>
                 </div>
                 <div>
                   <div className="text-gray-400">Size Class</div>
-                  <div className="text-blue-300 font-medium">
-                    {formData.koi_prad < 1.25 ? 'Earth-like' : 
-                     formData.koi_prad < 2 ? 'Super-Earth' : 'Gas Giant'}
+                  <div className="text-red-300 font-medium">
+                    {formData.pl_rade < 1.25 ? 'Earth-like' : 
+                     formData.pl_rade < 2 ? 'Super-Earth' : 'Gas Giant'}
                   </div>
                 </div>
                 <div>
                   <div className="text-gray-400">Orbit Type</div>
-                  <div className="text-blue-300 font-medium">
-                    {formData.koi_period < 100 ? 'Hot' : 
-                     formData.koi_period < 500 ? 'Warm' : 'Cold'}
+                  <div className="text-red-300 font-medium">
+                    {formData.pl_orbper < 10 ? 'Ultra-Short' : 
+                     formData.pl_orbper < 100 ? 'Short' : 'Long'}
                   </div>
                 </div>
                 <div>
-                  <div className="text-gray-400">Detection</div>
-                  <div className="text-blue-300 font-medium">
-                    {formData.koi_score > 0.8 ? 'Strong' : 
-                     formData.koi_score > 0.5 ? 'Moderate' : 'Weak'}
+                  <div className="text-gray-400">Transit Signal</div>
+                  <div className="text-red-300 font-medium">
+                    {formData.pl_trandep > 0.001 ? 'Strong' : 
+                     formData.pl_trandep > 0.0001 ? 'Moderate' : 'Weak'}
                   </div>
                 </div>
               </div>
@@ -577,109 +568,70 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
               >
                 {/* Claude AI Results */}
                 {planet.claudeResponse && (
-                  <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 rounded-xl p-4 border border-blue-700/50">
+                  <div className="bg-gradient-to-br from-red-900/40 to-orange-900/40 rounded-xl p-4 border border-red-700/50">
                     <div className="flex items-center gap-2 mb-3">
-                      <Zap className="h-4 w-4 text-blue-400" />
-                      <h4 className="text-sm font-semibold text-blue-300">Claude AI Analysis</h4>
+                      <Zap className="h-4 w-4 text-red-400" />
+                      <h4 className="text-sm font-semibold text-red-300">Claude AI Analysis</h4>
                     </div>
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between">
                         <span className="text-gray-400">Disposition:</span>
-                        <span className="text-blue-300 font-medium">{planet.claudeResponse.disposition}</span>
+                        <span className="text-red-300 font-medium">{planet.claudeResponse.disposition}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Confidence:</span>
-                        <span className="text-blue-300 font-medium">{(planet.claudeResponse.confidence * 100).toFixed(1)}%</span>
+                        <span className="text-red-300 font-medium">{(planet.claudeResponse.confidence * 100).toFixed(1)}%</span>
                       </div>
                       {planet.claudeResponse.planet_type && (
                         <div className="flex justify-between">
                           <span className="text-gray-400">Planet Type:</span>
-                          <span className="text-blue-300 font-medium">{planet.claudeResponse.planet_type}</span>
+                          <span className="text-red-300 font-medium">{planet.claudeResponse.planet_type}</span>
                         </div>
                       )}
                       {planet.claudeResponse.habitability_assessment && (
-                        <div className="flex justify-between">
+                        <div className="mt-2">
                           <span className="text-gray-400">Habitability:</span>
-                          <span className="text-blue-300 font-medium">{planet.claudeResponse.habitability_assessment}</span>
+                          <p className="text-red-200 text-xs mt-1 leading-tight">{planet.claudeResponse.habitability_assessment}</p>
                         </div>
                       )}
                       {planet.claudeResponse.reasoning && (
-                        <div className="mt-2 pt-2 border-t border-blue-700/30">
-                          <div className="text-gray-400 mb-1">Reasoning:</div>
-                          <div className="text-blue-200 text-xs leading-relaxed">{planet.claudeResponse.reasoning}</div>
+                        <div className="mt-2">
+                          <span className="text-gray-400">Analysis:</span>
+                          <p className="text-red-200 text-xs mt-1 leading-tight">{planet.claudeResponse.reasoning}</p>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
 
-                {/* Flask ML Model Results */}
+                {/* Flask ML Results */}
                 {planet.flaskResponse && (
-                  <div className="bg-gradient-to-br from-green-900/40 to-emerald-900/40 rounded-xl p-4 border border-green-700/50">
+                  <div className="bg-gradient-to-br from-orange-900/40 to-yellow-900/40 rounded-xl p-4 border border-orange-700/50">
                     <div className="flex items-center gap-2 mb-3">
-                      <Activity className="h-4 w-4 text-green-400" />
-                      <h4 className="text-sm font-semibold text-green-300">ML Model Analysis</h4>
+                      <Activity className="h-4 w-4 text-orange-400" />
+                      <h4 className="text-sm font-semibold text-orange-300">ML Model Analysis</h4>
                     </div>
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Is Exoplanet:</span>
-                        <span className={`font-medium ${planet.flaskResponse.is_exoplanet ? 'text-green-300' : 'text-red-300'}`}>
-                          {planet.flaskResponse.is_exoplanet ? '✅ Yes' : '❌ No'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">KOI Disposition:</span>
-                        <span className="text-green-300 font-medium">{planet.flaskResponse.koi_pdisposition}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Planet Type:</span>
-                        <span className="text-green-300 font-medium">{planet.flaskResponse.prediction}</span>
+                        <span className="text-gray-400">Disposition:</span>
+                        <span className="text-orange-300 font-medium">{planet.flaskResponse.tess_disposition}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Probability:</span>
-                        <span className="text-green-300 font-medium">{(planet.flaskResponse.probability * 100).toFixed(1)}%</span>
+                        <span className="text-orange-300 font-medium">{(planet.flaskResponse.probability * 100).toFixed(1)}%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Confidence:</span>
-                        <span className={`font-medium ${planet.flaskResponse.probability > 0.8 ? 'text-green-300' : planet.flaskResponse.probability > 0.6 ? 'text-yellow-300' : 'text-red-300'}`}>
-                          {planet.flaskResponse.probability > 0.8 ? 'High' : planet.flaskResponse.probability > 0.6 ? 'Medium' : 'Low'}
-                        </span>
+                        <span className="text-gray-400">Prediction:</span>
+                        <span className="text-orange-300 font-medium">{planet.flaskResponse.prediction}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Timestamp:</span>
-                        <span className="text-green-300 font-medium text-xs">
-                          {new Date(planet.flaskResponse.timestamp).toLocaleTimeString()}
-                        </span>
+                        <span className="text-gray-400">Is Exoplanet:</span>
+                        <span className="text-orange-300 font-medium">{planet.flaskResponse.is_exoplanet ? 'Yes' : 'No'}</span>
                       </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Comparison Summary */}
-                {planet.claudeResponse && planet.flaskResponse && (
-                  <div className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-xl p-4 border border-gray-600/50">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Globe className="h-4 w-4 text-yellow-400" />
-                      <h4 className="text-sm font-semibold text-yellow-300">Analysis Comparison</h4>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 text-xs">
-                      <div>
-                        <div className="text-gray-400">Claude AI</div>
-                        <div className="text-blue-300 font-medium">
-                          {planet.claudeResponse.disposition} ({(planet.claudeResponse.confidence * 100).toFixed(0)}%)
-                        </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Analyzed:</span>
+                        <span className="text-orange-300 font-medium">{new Date(planet.flaskResponse.timestamp).toLocaleTimeString()}</span>
                       </div>
-                      <div>
-                        <div className="text-gray-400">ML Model</div>
-                        <div className="text-green-300 font-medium">
-                          {planet.flaskResponse.koi_pdisposition} ({(planet.flaskResponse.probability * 100).toFixed(0)}%)
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-2 text-xs text-gray-400 text-center">
-                      {planet.claudeResponse.disposition.toLowerCase() === planet.flaskResponse.koi_pdisposition.toLowerCase() 
-                        ? '✅ Both models agree' 
-                        : '⚠️ Models disagree - further analysis recommended'}
                     </div>
                   </div>
                 )}

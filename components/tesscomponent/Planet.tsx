@@ -2,12 +2,12 @@
 
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Sphere, Ring,  Html } from '@react-three/drei';
+import { Sphere, Ring, Text, Html } from '@react-three/drei';
 import * as THREE from 'three';
-import { PlanetData } from './KeplerVisualizer';
+import { TessPlanetData } from './TessVisualizer';
 
 interface PlanetProps {
-  data: PlanetData;
+  data: TessPlanetData;
   onClick: () => void;
   isSelected: boolean;
 }
@@ -92,7 +92,7 @@ export default function Planet({ data, onClick, isSelected }: PlanetProps) {
         visible={false}
       >
         <meshBasicMaterial
-          color={isSelected ? "#4A90E2" : "#6B7280"}
+          color={isSelected ? "#E74C3C" : "#6B7280"}
           transparent
           opacity={0.3}
           side={THREE.DoubleSide}
@@ -106,7 +106,7 @@ export default function Planet({ data, onClick, isSelected }: PlanetProps) {
         position={data.position}
       >
         <meshBasicMaterial
-          color={data.isAnalyzing ? "#60A5FA" : getPredictionColor()}
+          color={data.isAnalyzing ? "#F97316" : getPredictionColor()}
           transparent
           opacity={0.3}
           side={THREE.BackSide}
@@ -134,7 +134,7 @@ export default function Planet({ data, onClick, isSelected }: PlanetProps) {
       >
         <meshStandardMaterial
           color={getPredictionColor()}
-          emissive={data.isAnalyzing ? "#1E40AF" : (hovered ? "#1E3A8A" : "#000000")}
+          emissive={data.isAnalyzing ? "#DC2626" : (hovered ? "#DC2626" : "#000000")}
           emissiveIntensity={data.isAnalyzing ? 0.4 : (hovered ? 0.2 : 0.1)}
           roughness={0.7}
           metalness={0.3}
@@ -150,7 +150,7 @@ export default function Planet({ data, onClick, isSelected }: PlanetProps) {
               Math.sin(i * Math.PI / 6) * 0.3,
               Math.sin(i * Math.PI / 6) * (data.size + 0.8)
             ]}>
-              <meshBasicMaterial color="#60A5FA" transparent opacity={0.9} />
+              <meshBasicMaterial color="#F97316" transparent opacity={0.9} />
             </Sphere>
           ))}
         </group>
@@ -186,7 +186,7 @@ export default function Planet({ data, onClick, isSelected }: PlanetProps) {
           distanceFactor={8}
           occlude
         >
-          <div className="bg-blue-600/95 backdrop-blur-sm border border-blue-400/50 rounded-lg px-4 py-2 text-sm font-bold whitespace-nowrap pointer-events-none animate-pulse shadow-2xl">
+          <div className="bg-red-600/95 backdrop-blur-sm border border-red-400/50 rounded-lg px-4 py-2 text-sm font-bold whitespace-nowrap pointer-events-none animate-pulse shadow-2xl">
             <span className="text-white">🔄 Analyzing...</span>
           </div>
         </Html>
@@ -204,38 +204,38 @@ export default function Planet({ data, onClick, isSelected }: PlanetProps) {
           distanceFactor={4}
           occlude
         >
-          <div className="bg-black/98 backdrop-blur-lg border-2 border-blue-400/60 rounded-2xl p-8 text-gray-200 pointer-events-none shadow-2xl min-w-[500px] min-h-[450px]">
+          <div className="bg-black/98 backdrop-blur-lg border-2 border-red-400/60 rounded-2xl p-8 text-gray-200 pointer-events-none shadow-2xl min-w-[500px] min-h-[450px]">
             <div className="font-bold text-white mb-6 text-center text-3xl border-b-2 border-gray-600 pb-4">
               {data.id}
             </div>
             <div className="space-y-5">
               <div className="flex justify-between items-center py-3 border-b border-gray-700/50">
                 <span className="font-semibold text-xl">Orbital Period:</span> 
-                <span className="text-blue-300 font-bold text-2xl">{data.koi_period.toFixed(1)} days</span>
+                <span className="text-orange-300 font-bold text-2xl">{data.pl_orbper.toFixed(1)} days</span>
               </div>
               <div className="flex justify-between items-center py-3 border-b border-gray-700/50">
                 <span className="font-semibold text-xl">Planet Radius:</span> 
-                <span className="text-green-300 font-bold text-2xl">{data.koi_prad.toFixed(2)} R⊕</span>
+                <span className="text-green-300 font-bold text-2xl">{data.pl_rade.toFixed(2)} R⊕</span>
               </div>
               <div className="flex justify-between items-center py-3 border-b border-gray-700/50">
-                <span className="font-semibold text-xl">Detection Score:</span> 
-                <span className="text-yellow-300 font-bold text-2xl">{data.koi_score.toFixed(2)}</span>
+                <span className="font-semibold text-xl">Transit Depth:</span> 
+                <span className="text-blue-300 font-bold text-2xl">{(data.pl_trandep * 1000000).toFixed(0)} ppm</span>
               </div>
               <div className="flex justify-between items-center py-3 border-b border-gray-700/50">
-                <span className="font-semibold text-xl">Temperature:</span> 
-                <span className="text-red-300 font-bold text-2xl">{data.koi_teq.toFixed(0)} K</span>
+                <span className="font-semibold text-xl">Equilibrium Temp:</span> 
+                <span className="text-yellow-300 font-bold text-2xl">{data.pl_eqt.toFixed(0)} K</span>
               </div>
               <div className="flex justify-between items-center py-3 border-b border-gray-700/50">
-                <span className="font-semibold text-xl">Star Temperature:</span> 
-                <span className="text-orange-300 font-bold text-2xl">{data.koi_steff.toFixed(0)} K</span>
+                <span className="font-semibold text-xl">Stellar Temperature:</span> 
+                <span className="text-purple-300 font-bold text-2xl">{data.st_teff.toFixed(0)} K</span>
               </div>
               <div className="flex justify-between items-center py-3 border-b border-gray-700/50">
-                <span className="font-semibold text-xl">Insolation:</span> 
-                <span className="text-purple-300 font-bold text-2xl">{data.koi_insol.toFixed(2)} S⊕</span>
+                <span className="font-semibold text-xl">TESS Magnitude:</span> 
+                <span className="text-cyan-300 font-bold text-2xl">{data.st_tmag.toFixed(1)} mag</span>
               </div>
             </div>
             <div className="text-center mt-6 pt-5 border-t-2 border-gray-600">
-              <div className="text-blue-400 font-bold text-2xl animate-pulse bg-blue-500/30 rounded-xl py-4 px-6 border border-blue-400/50">
+              <div className="text-red-400 font-bold text-2xl animate-pulse bg-red-500/30 rounded-xl py-4 px-6 border border-red-400/50">
                 🔍 Click to Analyze Planet
               </div>
             </div>
