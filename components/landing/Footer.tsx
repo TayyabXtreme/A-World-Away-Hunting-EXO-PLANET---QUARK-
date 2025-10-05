@@ -20,10 +20,12 @@ const quickLinks = [
 ];
 
 const resources = [
-  { name: "NASA Space Apps", href: "https://www.spaceappschallenge.org/" },
-  { name: "NASA Exoplanet Archive", href: "https://exoplanetarchive.ipac.caltech.edu/" },
-  { name: "Research Papers", href: "#" },
-  { name: "Contact", href: "mailto:tayyabxtrem@gmail.com" }
+  { name: "Challenge Resources", href: "https://www.spaceappschallenge.org/2025/challenges/a-world-away-hunting-for-exoplanets-with-ai/?tab=resources" },
+  { name: "Our Project Dashboard", href: "https://www.spaceappschallenge.org/2025/find-a-team/quark/?tab=project" },
+  { name: "Kepler Dataset", href: "https://exoplanetarchive.ipac.caltech.edu/cgi-bin/TblView/nph-tblView?app=ExoTbls&config=cumulative" },
+  { name: "TESS Dataset", href: "https://exoplanetarchive.ipac.caltech.edu/cgi-bin/TblView/nph-tblView?app=ExoTbls&config=TOI" },
+  { name: "K2 Dataset", href: "https://exoplanetarchive.ipac.caltech.edu/cgi-bin/TblView/nph-tblView?app=ExoTbls&config=k2pandc" },
+  { name: "Research Article", href: "https://academic.oup.com/mnras/article/513/4/5505/6472249" }
 ];
 
 export default function Footer() {

@@ -414,7 +414,7 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
         }
       };
 
-      const response = await fetch('http://127.0.0.1:5000/predict/tess', {
+      const response = await fetch('https://ml-backend-1zgp.onrender.com/predict/tess', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

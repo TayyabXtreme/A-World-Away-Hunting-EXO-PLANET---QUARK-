@@ -152,7 +152,7 @@ export default function SatelliteSection() {
                     <h3 className={`text-lg font-bold bg-gradient-to-r ${mission.color} bg-clip-text text-transparent mb-1`}>
                       {mission.name}
                     </h3>
-                    <p className="text-xs text-slate-500 mb-2">
+                    <p className="text-xs text-slate-500 mb-2 h-[32px]">
                       {mission.subtitle}
                     </p>
                     <p className="text-xs text-slate-400 leading-relaxed">
