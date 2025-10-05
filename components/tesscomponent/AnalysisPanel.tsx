@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, Activity, Globe, Sun, Thermometer, Zap, Orbit, Satellite, AlertCircle } from 'lucide-react';
+import { X, Activity, Globe, Sun, Thermometer, Zap, Orbit, Satellite, AlertCircle, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { TessPlanetData } from './TessVisualizer';
 import AWSCredentialsDialog from '@/components/ui/aws-credentials-dialog';
+import { ResultDialog } from '@/components/ui/result-dialog';
+import { toast } from 'sonner';
 
 interface AnalysisPanelProps {
   planet: TessPlanetData;
@@ -176,6 +178,7 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
   const [showCredentialsDialog, setShowCredentialsDialog] = useState(false);
   const [userCredentials, setUserCredentials] = useState<AWSCredentials | null>(null);
   const [hasEnvCredentials, setHasEnvCredentials] = useState(false);
+  const [showResultDialog, setShowResultDialog] = useState(false);
 
   useEffect(() => {
     setFormData(planet);
@@ -274,15 +277,32 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
         }
       });
 
+      // Show success toast
+      toast.success('Claude AI Analysis Complete!', {
+        description: `Classification: ${getTessDispositionName(result.disposition)}`,
+        duration: 5000,
+      });
+
+      // Show result dialog
+      setShowResultDialog(true);
+
     } catch (error) {
       console.error('Analysis failed:', error);
       onUpdate({ isAnalyzing: false });
       
       const errorMessage = error instanceof Error ? error.message : 'TESS analysis failed. Please check your AWS credentials and try again.';
+      
+      // Show error toast
       if (errorMessage.includes('credential') || errorMessage.includes('auth')) {
-        alert(`Claude AI Analysis Error: ${errorMessage}\n\nPlease click "Analyze with Claude AI" again to configure credentials.`);
+        toast.error('Authentication Error', {
+          description: 'Please configure your AWS credentials and try again.',
+          duration: 6000,
+        });
       } else {
-        alert(`Claude AI Analysis Error: ${errorMessage}`);
+        toast.error('Claude AI Analysis Failed', {
+          description: errorMessage,
+          duration: 5000,
+        });
       }
     }
   };
@@ -290,6 +310,13 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
   const handleCredentialsSubmit = (credentials: AWSCredentials) => {
     setUserCredentials(credentials);
     setShowCredentialsDialog(false);
+    
+    // Show success toast
+    toast.success('AWS Credentials Configured', {
+      description: 'Starting Claude AI analysis...',
+      duration: 3000,
+    });
+    
     setTimeout(() => handleAnalyze(), 100);
   };
 
@@ -381,19 +408,33 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
         }
       });
 
+      // Show success toast
+      toast.success('ML Model Analysis Complete!', {
+        description: `Classification: ${result.tfopwg_disp}`,
+        duration: 5000,
+      });
+
+      // Show result dialog
+      setShowResultDialog(true);
+
     } catch (error) {
       console.error('Flask analysis failed:', error);
       onUpdate({ isAnalyzing: false });
       
-   
-      alert(`Flask API Error: ${error instanceof Error ? error.message : 'Connection failed. Make sure Flask server is running on http://127.0.0.1:5000'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Connection failed. Make sure Flask server is running on http://127.0.0.1:5000';
+      
+      // Show error toast
+      toast.error('Flask API Error', {
+        description: errorMessage,
+        duration: 6000,
+      });
     }
   };
 
   const getPredictionBadge = () => {
     if (planet.isAnalyzing) {
       return (
-        <Badge variant="outline" className="bg-red-500/20 border-red-400 text-red-300 animate-pulse">
+        <Badge variant="outline" className="border-red-400/50 text-red-400 bg-red-400/10 animate-pulse">
           🔄 Analyzing...
         </Badge>
       );
@@ -401,7 +442,7 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
 
     if (planet.prediction === 'confirmed') {
       return (
-        <Badge variant="outline" className="bg-green-500/20 border-green-400 text-green-300">
+        <Badge variant="outline" className="border-green-400/50 text-green-400 bg-green-400/10">
           ✅ Confirmed Exoplanet
         </Badge>
       );
@@ -409,7 +450,7 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
 
     if (planet.prediction === 'false-positive') {
       return (
-        <Badge variant="outline" className="bg-red-500/20 border-red-400 text-red-300">
+        <Badge variant="outline" className="border-red-400/50 text-red-400 bg-red-400/10">
           ❌ False Positive
         </Badge>
       );
@@ -417,14 +458,14 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
 
     if (planet.prediction === 'candidate') {
       return (
-        <Badge variant="outline" className="bg-yellow-500/20 border-yellow-400 text-yellow-300">
+        <Badge variant="outline" className="border-yellow-400/50 text-yellow-400 bg-yellow-400/10">
           🟡 Planet Candidate
         </Badge>
       );
     }
 
     return (
-      <Badge variant="outline" className="bg-gray-500/20 border-gray-400 text-gray-300">
+      <Badge variant="outline" className="border-gray-400/50 text-gray-400 bg-gray-400/10">
         🔍 Ready for Analysis
       </Badge>
     );
@@ -610,10 +651,26 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
 
               {/* Info Text */}
               <div className="text-xs text-gray-500 text-center space-y-1 my-3">
-                             <p><strong>Claude AI:</strong> Advanced reasoning & scientific analysis</p>
-                             <p><strong>ML Model:</strong> Trained on K2 mission dataset patterns</p>
-                             <p className="flex "><AlertCircle className="h-3 w-3"/> AI models can make mistakes. Please review results carefully.</p>
-                           </div>
+                <p><strong>Claude AI:</strong> Advanced reasoning & scientific analysis</p>
+                <p><strong>ML Model:</strong> Trained on TESS mission dataset patterns</p>
+                <p className="flex "><AlertCircle className="h-3 w-3"/> AI models can make mistakes. Please review results carefully.</p>
+              </div>
+
+              {/* View Results Button - Show when there are results */}
+              {(planet.claudeResponse || planet.flaskResponse) && (
+                <Button
+                  onClick={() => setShowResultDialog(true)}
+                  variant="outline"
+                  className="w-full bg-gradient-to-r from-purple-600/20 to-pink-600/20 
+                    hover:from-purple-600/30 hover:to-pink-600/30 
+                    text-purple-300 h-10 font-medium shadow-lg shadow-purple-600/20 
+                    transition-all duration-300
+                    border border-purple-500/30 hover:border-purple-400/50"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  View Detailed Results
+                </Button>
+              )}
             </motion.div>
 
             {/* Planet Stats Summary */}
@@ -655,87 +712,6 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
               </div>
             </motion.div>
 
-            {/* Analysis Results */}
-            {(planet.claudeResponse || planet.flaskResponse) && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.0 }}
-                className="space-y-4"
-              >
-                {/* Claude AI Results */}
-                {planet.claudeResponse && (
-                  <div className="bg-gradient-to-br from-red-900/40 to-orange-900/40 rounded-xl p-4 border border-red-700/50">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Zap className="h-4 w-4 text-red-400" />
-                      <h4 className="text-sm font-semibold text-red-300">Claude AI Analysis</h4>
-                    </div>
-                    <div className="space-y-2 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Is Exoplanet:</span>
-                        <span className={`font-medium ${planet.claudeResponse.is_exoplanet ? 'text-green-300' : 'text-red-300'}`}>
-                          {planet.claudeResponse.is_exoplanet ? '✅ Yes' : '❌ No'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">TESS Disposition:</span>
-                        <span className="text-red-300 font-medium">{getTessDispositionName(planet.claudeResponse.disposition)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Confidence:</span>
-                        <span className="text-red-300 font-medium">{(planet.claudeResponse.confidence * 100).toFixed(1)}%</span>
-                      </div>
-                      {planet.claudeResponse.planet_type && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Planet Type:</span>
-                          <span className="text-red-300 font-medium">{planet.claudeResponse.planet_type}</span>
-                        </div>
-                      )}
-                      {planet.claudeResponse.reasoning && (
-                        <div className="mt-2">
-                          <span className="text-gray-400">Analysis:</span>
-                          <p className="text-red-200 text-xs mt-1 leading-tight">{planet.claudeResponse.reasoning}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Flask ML Results */}
-                {planet.flaskResponse && (
-                  <div className="bg-gradient-to-br from-orange-900/40 to-yellow-900/40 rounded-xl p-4 border border-orange-700/50">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Activity className="h-4 w-4 text-orange-400" />
-                      <h4 className="text-sm font-semibold text-orange-300">ML Model Analysis</h4>
-                    </div>
-                    <div className="space-y-2 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">TFOPWG Disposition:</span>
-                        <span className="text-orange-300 font-medium">{planet.flaskResponse.tfopwg_disp}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Probability:</span>
-                        <span className="text-orange-300 font-medium">{(planet.flaskResponse.probability * 100).toFixed(1)}%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Planet Type:</span>
-                        <span className="text-orange-300 font-medium">{planet.flaskResponse.planet_type}</span>
-                      </div>
-                      {planet.flaskResponse.tfopwg_disp_explanation && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Explanation:</span>
-                          <p className="text-orange-200 text-xs mt-1 leading-tight">{planet.flaskResponse.tfopwg_disp_explanation}</p>
-                        </div>
-                      )}
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Analyzed:</span>
-                        <span className="text-orange-300 font-medium">{new Date(planet.flaskResponse.timestamp).toLocaleTimeString()}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            )}
           </CardContent>
         </Card>
       </div>
@@ -748,6 +724,16 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
         onSkip={handleCredentialsSkip}
         canSkip={hasEnvCredentials}
         isLoading={planet.isAnalyzing}
+      />
+
+      {/* Result Dialog */}
+      <ResultDialog
+        open={showResultDialog}
+        onOpenChange={setShowResultDialog}
+        claudeResponse={planet.claudeResponse}
+        flaskResponse={planet.flaskResponse}
+        prediction={planet.prediction}
+        planetName={planet.id}
       />
     </motion.div>
   );

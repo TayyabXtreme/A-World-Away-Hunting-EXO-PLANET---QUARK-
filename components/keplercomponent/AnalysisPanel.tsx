@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, Zap, Activity, Globe, Thermometer, Sun, Orbit, AlertCircle } from 'lucide-react';
+import { X, Zap, Activity, Globe, Thermometer, Sun, Orbit, AlertCircle, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { PlanetData } from './KeplerVisualizer';
 import AWSCredentialsDialog from '@/components/ui/aws-credentials-dialog';
+import { ResultDialog } from '@/components/ui/result-dialog';
+import { toast } from 'sonner';
 
 interface AnalysisPanelProps {
   planet: PlanetData;
@@ -184,6 +186,7 @@ const parameters: ParameterConfig[] = [
 export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPanelProps) {
   const [formData, setFormData] = useState(planet);
   const [showCredentialsDialog, setShowCredentialsDialog] = useState(false);
+  const [showResultDialog, setShowResultDialog] = useState(false);
   const [userCredentials, setUserCredentials] = useState<AWSCredentials | null>(null);
   const [hasEnvCredentials, setHasEnvCredentials] = useState(false);
 
@@ -250,8 +253,6 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
 
       if (!response.ok) {
         const errorData = await response.json();
-        
-        // Don't automatically reopen dialog - let user manually retry
         throw new Error(errorData.error || 'Prediction request failed');
       }
 
@@ -278,23 +279,45 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
         }
       });
 
+      // Show success toast
+      toast.success('Claude AI Analysis Complete!', {
+        description: `Classification: ${result.disposition}`,
+        duration: 5000,
+      });
+
+      // Show result dialog
+      setShowResultDialog(true);
+
     } catch (error) {
       console.error('Analysis failed:', error);
       onUpdate({ isAnalyzing: false });
       
-      // Show user-friendly error message without auto-reopening dialog
       const errorMessage = error instanceof Error ? error.message : 'Connection failed';
+      
+      // Show error toast
       if (errorMessage.includes('credential') || errorMessage.includes('auth')) {
-        alert(`Claude AI Analysis Error: ${errorMessage}\n\nPlease click "Analyze with Claude AI" again to configure credentials.`);
+        toast.error('Authentication Error', {
+          description: 'Please configure your AWS credentials and try again.',
+          duration: 6000,
+        });
       } else {
-        alert(`Claude AI Analysis Error: ${errorMessage}`);
+        toast.error('Claude AI Analysis Failed', {
+          description: errorMessage,
+          duration: 5000,
+        });
       }
     }
   };
 
   const handleCredentialsSubmit = (credentials: AWSCredentials) => {
     setUserCredentials(credentials);
-    setShowCredentialsDialog(false); // Close dialog immediately after submission
+    setShowCredentialsDialog(false);
+    
+    // Show success toast
+    toast.success('AWS Credentials Configured', {
+      description: 'Starting Claude AI analysis...',
+      duration: 3000,
+    });
     
     // Retry the analysis with the provided credentials
     setTimeout(() => {
@@ -392,12 +415,26 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
         }
       });
 
+      // Show success toast
+      toast.success('ML Model Analysis Complete!', {
+        description: `Classification: ${result.koi_pdisposition}`,
+        duration: 5000,
+      });
+
+      // Show result dialog
+      setShowResultDialog(true);
+
     } catch (error) {
       console.error('Flask analysis failed:', error);
       onUpdate({ isAnalyzing: false });
       
-     
-      alert(`Flask API Error: ${error instanceof Error ? error.message : 'Connection failed. Make sure Flask server is running on http://127.0.0.1:5000'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Connection failed';
+      
+      // Show error toast
+      toast.error('Flask API Error', {
+        description: errorMessage + '. Make sure Flask server is running on http://127.0.0.1:5000',
+        duration: 6000,
+      });
     }
   };
 
@@ -626,161 +663,25 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
                              <p><strong>ML Model:</strong> Trained on K2 mission dataset patterns</p>
                              <p className="flex "><AlertCircle className="h-3 w-3"/> AI models can make mistakes. Please review results carefully.</p>
                            </div>
+
+              {/* View Results Button - Show when there are results */}
+              {(planet.claudeResponse || planet.flaskResponse) && (
+                <Button
+                  onClick={() => setShowResultDialog(true)}
+                  variant="outline"
+                  className="w-full bg-gradient-to-r from-purple-600/20 to-pink-600/20 
+                    hover:from-purple-600/30 hover:to-pink-600/30 
+                    text-purple-300 h-10 font-medium shadow-lg shadow-purple-600/20 
+                    transition-all duration-300
+                    border border-purple-500/30 hover:border-purple-400/50"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  View Detailed Results
+                </Button>
+              )}
             </motion.div>
 
-            {/* Planet Stats Summary */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 }}
-              className="bg-gradient-to-br from-gray-800/60 to-gray-900/40 rounded-xl p-4 border border-gray-700/50"
-            >
-              <h4 className="text-sm font-semibold text-white mb-3">Quick Stats</h4>
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div>
-                  <div className="text-gray-400">Habitability</div>
-                  <div className="text-blue-300 font-medium">
-                    {formData.koi_teq > 200 && formData.koi_teq < 350 ? 'Potential' : 'Unlikely'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-gray-400">Size Class</div>
-                  <div className="text-blue-300 font-medium">
-                    {formData.koi_prad < 1.25 ? 'Earth-like' : 
-                     formData.koi_prad < 2 ? 'Super-Earth' : 'Gas Giant'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-gray-400">Orbit Type</div>
-                  <div className="text-blue-300 font-medium">
-                    {formData.koi_period < 100 ? 'Hot' : 
-                     formData.koi_period < 500 ? 'Warm' : 'Cold'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-gray-400">Detection</div>
-                  <div className="text-blue-300 font-medium">
-                    {formData.koi_score > 0.8 ? 'Strong' : 
-                     formData.koi_score > 0.5 ? 'Moderate' : 'Weak'}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Analysis Results */}
-            {(planet.claudeResponse || planet.flaskResponse) && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.0 }}
-                className="space-y-4"
-              >
-                {/* Claude AI Results */}
-                {planet.claudeResponse && (
-                  <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 rounded-xl p-4 border border-blue-700/50">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Zap className="h-4 w-4 text-blue-400" />
-                      <h4 className="text-sm font-semibold text-blue-300">Claude AI Analysis</h4>
-                    </div>
-                    <div className="space-y-2 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Is Exoplanet:</span>
-                        <span className={`font-medium ${planet.claudeResponse.is_exoplanet ? 'text-green-300' : 'text-red-300'}`}>
-                          {planet.claudeResponse.is_exoplanet ? '✅ Yes' : '❌ No'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Disposition:</span>
-                        <span className="text-blue-300 font-medium">{planet.claudeResponse.disposition}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Confidence:</span>
-                        <span className="text-blue-300 font-medium">{(planet.claudeResponse.confidence * 100).toFixed(1)}%</span>
-                      </div>
-                      {planet.claudeResponse.planet_type && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Planet Type:</span>
-                          <span className="text-blue-300 font-medium">{planet.claudeResponse.planet_type}</span>
-                        </div>
-                      )}
-                      {planet.claudeResponse.reasoning && (
-                        <div className="mt-2 pt-2 border-t border-blue-700/30">
-                          <div className="text-gray-400 mb-1">Analysis:</div>
-                          <div className="text-blue-200 text-xs leading-relaxed">{planet.claudeResponse.reasoning}</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Flask ML Model Results */}
-                {planet.flaskResponse && (
-                  <div className="bg-gradient-to-br from-green-900/40 to-emerald-900/40 rounded-xl p-4 border border-green-700/50">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Activity className="h-4 w-4 text-green-400" />
-                      <h4 className="text-sm font-semibold text-green-300">ML Model Analysis</h4>
-                    </div>
-                    <div className="space-y-2 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Is Exoplanet:</span>
-                        <span className={`font-medium ${planet.flaskResponse.is_exoplanet ? 'text-green-300' : 'text-red-300'}`}>
-                          {planet.flaskResponse.is_exoplanet ? '✅ Yes' : '❌ No'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">KOI Disposition:</span>
-                        <span className="text-green-300 font-medium">{planet.flaskResponse.koi_pdisposition}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Probability:</span>
-                        <span className="text-green-300 font-medium">{(planet.flaskResponse.probability * 100).toFixed(1)}%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Analyzed:</span>
-                        <span className="text-green-300 font-medium text-xs">
-                          {new Date(planet.flaskResponse.timestamp).toLocaleTimeString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Comparison Summary */}
-                {planet.claudeResponse && planet.flaskResponse && (
-                  <div className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-xl p-4 border border-gray-600/50">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Globe className="h-4 w-4 text-yellow-400" />
-                      <h4 className="text-sm font-semibold text-yellow-300">Analysis Comparison</h4>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 text-xs">
-                      <div>
-                        <div className="text-gray-400">Claude AI</div>
-                        <div className={`font-medium ${planet.claudeResponse.is_exoplanet ? 'text-green-300' : 'text-red-300'}`}>
-                          {planet.claudeResponse.is_exoplanet ? '✅ Exoplanet' : '❌ Not Exoplanet'}
-                        </div>
-                        <div className="text-blue-300 text-xs mt-1">
-                          {planet.claudeResponse.disposition} ({(planet.claudeResponse.confidence * 100).toFixed(0)}%)
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-gray-400">ML Model</div>
-                        <div className={`font-medium ${planet.flaskResponse.is_exoplanet ? 'text-green-300' : 'text-red-300'}`}>
-                          {planet.flaskResponse.is_exoplanet ? '✅ Exoplanet' : '❌ Not Exoplanet'}
-                        </div>
-                        <div className="text-green-300 text-xs mt-1">
-                          {planet.flaskResponse.koi_pdisposition} ({(planet.flaskResponse.probability * 100).toFixed(0)}%)
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-2 text-xs text-gray-400 text-center">
-                      {planet.claudeResponse.is_exoplanet === planet.flaskResponse.is_exoplanet 
-                        ? '✅ Both models agree on exoplanet status' 
-                        : '⚠️ Models disagree - further analysis recommended'}
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            )}
+      
           </CardContent>
         </Card>
       </div>
@@ -793,6 +694,16 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
         onSkip={handleCredentialsSkip}
         canSkip={hasEnvCredentials}
         isLoading={planet.isAnalyzing}
+      />
+
+      {/* Result Dialog */}
+      <ResultDialog
+        open={showResultDialog}
+        onOpenChange={setShowResultDialog}
+        claudeResponse={planet.claudeResponse}
+        flaskResponse={planet.flaskResponse}
+        prediction={planet.prediction}
+        planetName={planet.id}
       />
     </motion.div>
   );
