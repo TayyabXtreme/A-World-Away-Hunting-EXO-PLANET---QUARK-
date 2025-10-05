@@ -11,6 +11,7 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { PlanetData } from './KeplerVisualizer';
+import AWSCredentialsDialog from '@/components/ui/aws-credentials-dialog';
 
 interface AnalysisPanelProps {
   planet: PlanetData;
@@ -18,6 +19,12 @@ interface AnalysisPanelProps {
   onClose: () => void;
   onUpdate: (data: Partial<PlanetData>) => void;
   onAnalyze: (planet: PlanetData) => void;
+}
+
+interface AWSCredentials {
+  aws_region: string;
+  aws_access_key_id: string;
+  aws_secret_access_key: string;
 }
 
 interface ParameterConfig {
@@ -176,10 +183,29 @@ const parameters: ParameterConfig[] = [
 
 export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPanelProps) {
   const [formData, setFormData] = useState(planet);
+  const [showCredentialsDialog, setShowCredentialsDialog] = useState(false);
+  const [userCredentials, setUserCredentials] = useState<AWSCredentials | null>(null);
+  const [hasEnvCredentials, setHasEnvCredentials] = useState(false);
 
   useEffect(() => {
     setFormData(planet);
   }, [planet]);
+
+  useEffect(() => {
+    // Check if environment variables are available
+    const checkEnvironmentCredentials = async () => {
+      try {
+        const response = await fetch('/api/check-env');
+        const data = await response.json();
+        setHasEnvCredentials(data.hasEnvironmentCredentials);
+      } catch (error) {
+        console.error('Failed to check environment credentials:', error);
+        setHasEnvCredentials(false);
+      }
+    };
+
+    checkEnvironmentCredentials();
+  }, []);
 
   const handleInputChange = (key: keyof PlanetData, value: number) => {
     const newData = { ...formData, [key]: value };
@@ -189,31 +215,44 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
 
   const handleAnalyze = async () => {
     try {
+      onUpdate({ isAnalyzing: true });
+
+      const payload = {
+        koi_score: formData.koi_score,
+        koi_period: formData.koi_period,
+        koi_time0bk: formData.koi_time0bk,
+        koi_impact: formData.koi_impact,
+        koi_duration: formData.koi_duration,
+        koi_depth: formData.koi_depth,
+        koi_prad: formData.koi_prad,
+        koi_teq: formData.koi_teq,
+        koi_insol: formData.koi_insol,
+        koi_steff: formData.koi_steff,
+        koi_slogg: formData.koi_slogg,
+        koi_srad: formData.koi_srad,
+        koi_model_snr: formData.koi_model_snr,
+        koi_srho: formData.koi_srho,
+        // Include user credentials if available
+        ...(userCredentials && {
+          aws_region: userCredentials.aws_region,
+          aws_access_key_id: userCredentials.aws_access_key_id,
+          aws_secret_access_key: userCredentials.aws_secret_access_key,
+        })
+      };
+
       const response = await fetch('/api/predict-keppler', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          koi_score: formData.koi_score,
-          koi_period: formData.koi_period,
-          koi_time0bk: formData.koi_time0bk,
-          koi_impact: formData.koi_impact,
-          koi_duration: formData.koi_duration,
-          koi_depth: formData.koi_depth,
-          koi_prad: formData.koi_prad,
-          koi_teq: formData.koi_teq,
-          koi_insol: formData.koi_insol,
-          koi_steff: formData.koi_steff,
-          koi_slogg: formData.koi_slogg,
-          koi_srad: formData.koi_srad,
-          koi_model_snr: formData.koi_model_snr,
-          koi_srho: formData.koi_srho,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error('Prediction request failed');
+        const errorData = await response.json();
+        
+        // Don't automatically reopen dialog - let user manually retry
+        throw new Error(errorData.error || 'Prediction request failed');
       }
 
       const result = await response.json();
@@ -227,7 +266,6 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
         prediction = 'candidate';
       }
 
-     
       onUpdate({ 
         isAnalyzing: false, 
         prediction: prediction,
@@ -243,7 +281,50 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
     } catch (error) {
       console.error('Analysis failed:', error);
       onUpdate({ isAnalyzing: false });
+      
+      // Show user-friendly error message without auto-reopening dialog
+      const errorMessage = error instanceof Error ? error.message : 'Connection failed';
+      if (errorMessage.includes('credential') || errorMessage.includes('auth')) {
+        alert(`Claude AI Analysis Error: ${errorMessage}\n\nPlease click "Analyze with Claude AI" again to configure credentials.`);
+      } else {
+        alert(`Claude AI Analysis Error: ${errorMessage}`);
+      }
     }
+  };
+
+  const handleCredentialsSubmit = (credentials: AWSCredentials) => {
+    setUserCredentials(credentials);
+    setShowCredentialsDialog(false); // Close dialog immediately after submission
+    
+    // Retry the analysis with the provided credentials
+    setTimeout(() => {
+      handleAnalyze();
+    }, 100);
+  };
+
+  const handleClaudeAnalyzeClick = () => {
+    if (!hasEnvCredentials && !userCredentials) {
+      // No environment variables and no user credentials - must provide credentials
+      setShowCredentialsDialog(true);
+    } else if (hasEnvCredentials && !userCredentials) {
+      // Environment variables available - show dialog but allow skip
+      setShowCredentialsDialog(true);
+    } else {
+      // User credentials already provided - proceed with analysis
+      handleAnalyze();
+    }
+  };
+
+  const handleCredentialsSkip = () => {
+    setShowCredentialsDialog(false);
+    // Proceed with environment variables
+    setTimeout(() => {
+      handleAnalyze();
+    }, 100);
+  };
+
+  const handleCredentialsClose = () => {
+    setShowCredentialsDialog(false);
   };
 
   const handleFlaskAnalyze = async () => {
@@ -402,6 +483,23 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
 
             <div className="mt-4">
               {getPredictionBadge()}
+              
+              {/* Credential Status */}
+              <div className="mt-2 flex items-center gap-2">
+                {userCredentials ? (
+                  <Badge variant="outline" className="border-green-400/50 text-green-400 bg-green-400/10 text-xs">
+                    🔐 Custom Credentials Set
+                  </Badge>
+                ) : hasEnvCredentials ? (
+                  <Badge variant="outline" className="border-blue-400/50 text-blue-400 bg-blue-400/10 text-xs">
+                    ⚡ Environment Variables Available
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="border-yellow-400/50 text-yellow-400 bg-yellow-400/10 text-xs">
+                    ⚠️ Credentials Required
+                  </Badge>
+                )}
+              </div>
             </div>
           </CardHeader>
 
@@ -472,7 +570,7 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
             >
               {/* Claude AI Analysis Button */}
               <Button
-                onClick={handleAnalyze}
+                onClick={handleClaudeAnalyzeClick}
                 disabled={planet.isAnalyzing}
                 className="w-full bg-gradient-to-r from-blue-600 via-blue-700 to-purple-700 
                   hover:from-blue-700 hover:via-blue-800 hover:to-purple-800 
@@ -489,6 +587,11 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
                   <>
                     <Zap className="h-4 w-4 mr-2" />
                     Analyze with Claude AI
+                    {userCredentials && (
+                      <Badge variant="outline" className="ml-2 border-green-400/50 text-green-400 bg-green-400/10 text-xs">
+                        ✓
+                      </Badge>
+                    )}
                   </>
                 )}
               </Button>
@@ -684,6 +787,16 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
           </CardContent>
         </Card>
       </div>
+
+      {/* AWS Credentials Dialog */}
+      <AWSCredentialsDialog
+        open={showCredentialsDialog}
+        onClose={handleCredentialsClose}
+        onSubmit={handleCredentialsSubmit}
+        onSkip={handleCredentialsSkip}
+        canSkip={hasEnvCredentials}
+        isLoading={planet.isAnalyzing}
+      />
     </motion.div>
   );
 }

@@ -4,16 +4,6 @@ import {
   ConverseCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 
-
-const client = new BedrockRuntimeClient({
-   region: process.env.AWS_REGION!,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey:process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-});
-
-
 const modelId = "us.anthropic.claude-3-5-sonnet-20241022-v2:0";
 
 export async function POST(request: NextRequest) {
@@ -21,7 +11,43 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
     
+    // Extract credentials from request body if provided
+    const {
+      aws_region,
+      aws_access_key_id,
+      aws_secret_access_key,
+      ...planetData
+    } = data;
+    
+    // Determine which credentials to use (user-provided or environment variables)
+    const region = aws_region || process.env.AWS_REGION;
+    const accessKeyId = aws_access_key_id || process.env.AWS_ACCESS_KEY_ID;
+    const secretAccessKey = aws_secret_access_key || process.env.AWS_SECRET_ACCESS_KEY;
+    
+    // Check if we have valid credentials
+    if (!region || !accessKeyId || !secretAccessKey) {
+      return NextResponse.json(
+        { 
+          error: 'Missing AWS credentials. Please provide AWS Region, Access Key ID, and Secret Access Key either through environment variables or in the request.',
+          success: false,
+          missingCredentials: true
+        },
+        { status: 400 }
+      );
+    }
+    
+    // Create Bedrock client with available credentials
+    const client = new BedrockRuntimeClient({
+      region: region,
+      credentials: {
+        accessKeyId: accessKeyId,
+        secretAccessKey: secretAccessKey,
+      },
+    });
+    
    
+    
+    // Extract exoplanet parameters
     const {
       koi_score,
       koi_period,
@@ -37,9 +63,7 @@ export async function POST(request: NextRequest) {
       koi_srad,
       koi_model_snr,
       koi_srho
-    } = data;
-
-    
+    } = planetData;    
     const prompt = `You are an expert exoplanet astronomer analyzing Kepler Objects of Interest (KOI) data. Please analyze the following exoplanet parameters and provide a scientific assessment.
 
 EXOPLANET PARAMETERS:
@@ -174,6 +198,31 @@ Based on the scientific analysis of these parameters, what is your assessment? C
 
   } catch (error) {
     console.error('Error in exoplanet prediction API:', error);
+    
+    // Handle specific AWS credential errors
+    if (error instanceof Error) {
+      if (error.message.includes('credentials') || error.message.includes('authentication')) {
+        return NextResponse.json(
+          { 
+            error: 'AWS authentication failed. Please check your credentials and ensure they have the correct permissions for Bedrock.',
+            success: false,
+            credentialError: true
+          },
+          { status: 401 }
+        );
+      }
+      
+      if (error.message.includes('region')) {
+        return NextResponse.json(
+          { 
+            error: 'Invalid AWS region. Please check your region setting.',
+            success: false,
+            regionError: true
+          },
+          { status: 400 }
+        );
+      }
+    }
     
     return NextResponse.json(
       { 
