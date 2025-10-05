@@ -25,7 +25,7 @@ const missions = [
     name: 'Kepler',
     subtitle: 'ML Transit Detection',
     description: 'AI models trained on transit light curves for exoplanet classification.',
-    route: '/kepler_prid',
+    route: '/kepler',
     period: '2009-2013',
     discoveries: '2,600+',
     status: 'Trained',
@@ -33,7 +33,7 @@ const missions = [
     color: 'from-green-400 to-emerald-500',
     borderColor: 'border-green-400/20',
     bgColor: 'bg-green-400/5',
-    highlights: ['LGBM Model']
+    highlights: [' XGBoost Model','Claude 3.5']
   },
   {
     id: 'k2',
@@ -48,7 +48,7 @@ const missions = [
     color: 'from-blue-400 to-cyan-500',
     borderColor: 'border-blue-400/20',
     bgColor: 'bg-blue-400/5',
-    highlights: ['LGBM Model', 'XGBOOST Model']
+    highlights: ['XGBoost Model', 'Claude 3.5']
   },
   {
     id: 'tess',
@@ -63,7 +63,7 @@ const missions = [
     color: 'from-purple-400 to-violet-500',
     borderColor: 'border-purple-400/20',
     bgColor: 'bg-purple-400/5',
-    highlights: ['LGBM Model', 'XGBOOST Model']
+    highlights: ['LGBM Model', 'Claude 3.5']
   }
 ];
 
@@ -195,7 +195,7 @@ export default function SatelliteSection() {
             className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-4 shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
             onClick={() => router.push('/dataSetVisualize')}
           >
-            Start AI Analysis
+            Explore Current Stellites
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>

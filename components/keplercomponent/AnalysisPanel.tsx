@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, Zap, Activity, Globe, Thermometer, Sun, Orbit } from 'lucide-react';
+import { X, Zap, Activity, Globe, Thermometer, Sun, Orbit, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -621,10 +621,11 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
               </Button>
 
               {/* Info Text */}
-              <div className="text-xs text-gray-500 text-center space-y-1">
-                <p>🤖 <strong>Claude AI:</strong> Advanced reasoning & scientific analysis</p>
-                <p>⚡ <strong>ML Model:</strong> Trained on Kepler dataset patterns</p>
-              </div>
+              <div className="text-xs text-gray-500 text-center space-y-1 my-3">
+                             <p><strong>Claude AI:</strong> Advanced reasoning & scientific analysis</p>
+                             <p><strong>ML Model:</strong> Trained on K2 mission dataset patterns</p>
+                             <p className="flex "><AlertCircle className="h-3 w-3"/> AI models can make mistakes. Please review results carefully.</p>
+                           </div>
             </motion.div>
 
             {/* Planet Stats Summary */}

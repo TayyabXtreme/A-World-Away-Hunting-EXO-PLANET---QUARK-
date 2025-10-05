@@ -245,7 +245,7 @@ export default function AWSCredentialsDialog({
               variant="outline"
               onClick={handleSkip}
               disabled={isLoading}
-              className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
+              className="border-gray-600 bg-black text-gray-300 hover:bg-gray-800 hover:text-white"
             >
               Skip (Use Environment)
             </Button>

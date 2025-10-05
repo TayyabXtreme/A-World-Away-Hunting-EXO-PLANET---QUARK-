@@ -16,7 +16,8 @@ import {
   Weight,
   Compass,
   MapPin,
-  Ruler
+  Ruler,
+  AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -26,6 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { K2PlanetData } from './K2Visualizer';
+import AWSCredentialsDialog from '@/components/ui/aws-credentials-dialog';
 
 interface AnalysisPanelProps {
   planet: K2PlanetData;
@@ -33,6 +35,12 @@ interface AnalysisPanelProps {
   onClose: () => void;
   onUpdate: (data: Partial<K2PlanetData>) => void;
   onAnalyze: (planet: K2PlanetData) => void;
+}
+
+interface AWSCredentials {
+  aws_region: string;
+  aws_access_key_id: string;
+  aws_secret_access_key: string;
 }
 
 interface ParameterConfig {
@@ -211,10 +219,29 @@ const parameters: ParameterConfig[] = [
 
 export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPanelProps) {
   const [formData, setFormData] = useState(planet);
+  const [showCredentialsDialog, setShowCredentialsDialog] = useState(false);
+  const [userCredentials, setUserCredentials] = useState<AWSCredentials | null>(null);
+  const [hasEnvCredentials, setHasEnvCredentials] = useState(false);
 
   useEffect(() => {
     setFormData(planet);
   }, [planet]);
+
+  useEffect(() => {
+    // Check if environment variables are available
+    const checkEnvironmentCredentials = async () => {
+      try {
+        const response = await fetch('/api/check-env');
+        const data = await response.json();
+        setHasEnvCredentials(data.hasEnvironmentCredentials);
+      } catch (error) {
+        console.error('Failed to check environment credentials:', error);
+        setHasEnvCredentials(false);
+      }
+    };
+
+    checkEnvironmentCredentials();
+  }, []);
 
   const handleInputChange = (key: keyof K2PlanetData, value: number) => {
     const newData = { ...formData, [key]: value };
@@ -226,29 +253,37 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPa
     try {
       onUpdate({ isAnalyzing: true });
 
+      const payload = {
+        pl_orbper: formData.pl_orbper,
+        pl_trandep: formData.pl_trandep,
+        pl_trandur: formData.pl_trandur,
+        pl_imppar: formData.pl_imppar,
+        pl_rade: formData.pl_rade,
+        pl_massj: formData.pl_massj,
+        pl_dens: formData.pl_dens,
+        pl_insol: formData.pl_insol,
+        pl_eqt: formData.pl_eqt,
+        st_teff: formData.st_teff,
+        st_rad: formData.st_rad,
+        st_mass: formData.st_mass,
+        st_logg: formData.st_logg,
+        ra: formData.ra,
+        dec: formData.dec,
+        sy_dist: formData.sy_dist,
+        // Include user credentials if available
+        ...(userCredentials && {
+          aws_region: userCredentials.aws_region,
+          aws_access_key_id: userCredentials.aws_access_key_id,
+          aws_secret_access_key: userCredentials.aws_secret_access_key,
+        })
+      };
+
       const response = await fetch('/api/predict-k2', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          pl_orbper: formData.pl_orbper,
-          pl_trandep: formData.pl_trandep,
-          pl_trandur: formData.pl_trandur,
-          pl_imppar: formData.pl_imppar,
-          pl_rade: formData.pl_rade,
-          pl_massj: formData.pl_massj,
-          pl_dens: formData.pl_dens,
-          pl_insol: formData.pl_insol,
-          pl_eqt: formData.pl_eqt,
-          st_teff: formData.st_teff,
-          st_rad: formData.st_rad,
-          st_mass: formData.st_mass,
-          st_logg: formData.st_logg,
-          ra: formData.ra,
-          dec: formData.dec,
-          sy_dist: formData.sy_dist,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -285,9 +320,49 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPa
       console.error('Analysis failed:', error);
       onUpdate({ isAnalyzing: false });
       
-      const errorMessage = error instanceof Error ? error.message : 'Analysis failed';
-      alert(`Claude AI Analysis Error: ${errorMessage}`);
+      // Show user-friendly error message without auto-reopening dialog
+      const errorMessage = error instanceof Error ? error.message : 'Connection failed';
+      if (errorMessage.includes('credential') || errorMessage.includes('auth')) {
+        alert(`Claude AI Analysis Error: ${errorMessage}\n\nPlease click "Analyze with Claude AI" again to configure credentials.`);
+      } else {
+        alert(`Claude AI Analysis Error: ${errorMessage}`);
+      }
     }
+  };
+
+  const handleCredentialsSubmit = (credentials: AWSCredentials) => {
+    setUserCredentials(credentials);
+    setShowCredentialsDialog(false);
+    
+    // Retry the analysis with the provided credentials
+    setTimeout(() => {
+      handleAnalyze();
+    }, 100);
+  };
+
+  const handleClaudeAnalyzeClick = () => {
+    if (!hasEnvCredentials && !userCredentials) {
+      // No environment variables and no user credentials - must provide credentials
+      setShowCredentialsDialog(true);
+    } else if (hasEnvCredentials && !userCredentials) {
+      // Environment variables available - show dialog but allow skip
+      setShowCredentialsDialog(true);
+    } else {
+      // User credentials already provided - proceed with analysis
+      handleAnalyze();
+    }
+  };
+
+  const handleCredentialsSkip = () => {
+    setShowCredentialsDialog(false);
+    // Proceed with environment variables
+    setTimeout(() => {
+      handleAnalyze();
+    }, 100);
+  };
+
+  const handleCredentialsClose = () => {
+    setShowCredentialsDialog(false);
   };
 
   const handleFlaskAnalyze = async () => {
@@ -445,6 +520,23 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPa
 
             <div className="mt-4">
               {getPredictionBadge()}
+              
+              {/* Credential Status */}
+              <div className="mt-2 flex items-center gap-2">
+                {userCredentials ? (
+                  <Badge variant="outline" className="border-green-400/50 text-green-400 bg-green-400/10 text-xs">
+                    🔐 Custom Credentials Set
+                  </Badge>
+                ) : hasEnvCredentials ? (
+                  <Badge variant="outline" className="border-blue-400/50 text-blue-400 bg-blue-400/10 text-xs">
+                    ⚡ Environment Variables Available
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="border-yellow-400/50 text-yellow-400 bg-yellow-400/10 text-xs">
+                    ⚠️ Credentials Required
+                  </Badge>
+                )}
+              </div>
             </div>
           </CardHeader>
 
@@ -509,10 +601,7 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPa
             {/* Analysis Actions */}
             <div className="space-y-3">
               <Button
-                onClick={() => {
-                  onUpdate({ isAnalyzing: true });
-                  handleAnalyze();
-                }}
+                onClick={handleClaudeAnalyzeClick}
                 disabled={planet.isAnalyzing}
                 className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 
                   text-white font-medium py-2.5 rounded-lg transition-all duration-200 
@@ -527,6 +616,11 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPa
                   <div className="flex items-center justify-center gap-2">
                     <Zap className="h-4 w-4" />
                     <span>Analyze with Claude AI</span>
+                    {userCredentials && (
+                      <Badge variant="outline" className="ml-2 border-green-400/50 text-green-400 bg-green-400/10 text-xs">
+                        ✓
+                      </Badge>
+                    )}
                   </div>
                 )}
               </Button>
@@ -551,6 +645,13 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPa
                   </div>
                 )}
               </Button>
+              
+              {/* Info Text */}
+              <div className="text-xs text-gray-500 text-center space-y-1 my-3">
+                <p><strong>Claude AI:</strong> Advanced reasoning & scientific analysis</p>
+                <p><strong>ML Model:</strong> Trained on K2 mission dataset patterns</p>
+                <p className="flex "><AlertCircle className="h-3 w-3"/> AI models can make mistakes. Please review results carefully.</p>
+              </div>
             </div>
 
           {/* Analysis Results */}
@@ -621,6 +722,16 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPa
           </CardContent>
         </Card>
       </div>
+
+      {/* AWS Credentials Dialog */}
+      <AWSCredentialsDialog
+        open={showCredentialsDialog}
+        onClose={handleCredentialsClose}
+        onSubmit={handleCredentialsSubmit}
+        onSkip={handleCredentialsSkip}
+        canSkip={hasEnvCredentials}
+        isLoading={planet.isAnalyzing}
+      />
     </motion.div>
   );
 }

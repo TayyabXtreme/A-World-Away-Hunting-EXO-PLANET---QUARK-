@@ -11,10 +11,12 @@ import PlanetDetailPanel from './PlanetDetailPanel';
 import PlanetField from './PlanetField';
 import LoadingOverlay from './LoadingOverlay';
 import { Button } from '@/components/ui/button';
-import { Search, Menu, X, Maximize2, Minimize2 } from 'lucide-react';
+import { Search, Menu, X, Maximize2, Minimize2, Home } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useRouter } from 'next/navigation';
 
 export default function DatasetVisualizer() {
+  const router = useRouter();
   const [state, setState] = useState<DatasetState>({
     planets: [],
     selectedPlanet: null,
@@ -161,6 +163,16 @@ export default function DatasetVisualizer() {
       >
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push('/')}
+              className="text-white hover:bg-white/10"
+              title="Back to Home"
+            >
+              <Home className="h-5 w-5" />
+            </Button>
+
             <Button
               variant="ghost"
               size="sm"

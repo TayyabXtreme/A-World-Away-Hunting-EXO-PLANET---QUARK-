@@ -43,7 +43,7 @@ const features = [
 
 const stats = [
   { label: 'Total Exoplanets', value: '1,500+', icon: <Database className="h-5 w-5" /> },
-  { label: 'Confirmed Planets', value: '1,200+', icon: <Star className="h-5 w-5" /> },
+  { label: 'Confirmed Planets', value: '580+', icon: <Star className="h-5 w-5" /> },
   { label: 'Discovery Methods', value: '3', icon: <Search className="h-5 w-5" /> }
 ];
 
