@@ -32,18 +32,17 @@ export interface PlanetData {
   prediction?: 'confirmed' | 'false-positive' | 'candidate' | null;
   isAnalyzing?: boolean;
   flaskResponse?: {
+    is_exoplanet: boolean;
     koi_pdisposition: string;
-    prediction: string;
     probability: number;
     status: string;
     timestamp: string;
-    is_exoplanet?: boolean;
   };
   claudeResponse?: {
     disposition: string;
     confidence: number;
     reasoning: string;
-    habitability_assessment?: string;
+    is_exoplanet: boolean;
     planet_type?: string;
   };
 }

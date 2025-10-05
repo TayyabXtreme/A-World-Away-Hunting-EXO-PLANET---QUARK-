@@ -273,7 +273,7 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
           disposition: result.disposition,
           confidence: result.confidence,
           reasoning: result.reasoning,
-          habitability_assessment: result.habitability_assessment,
+          is_exoplanet: result.is_exoplanet,
           planet_type: result.planet_type
         }
       });
@@ -368,6 +368,7 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
       
       let prediction: 'confirmed' | 'false-positive' | 'candidate';
       
+      // Determine prediction based on Flask response
       if (result.is_exoplanet === true) {
         if (result.koi_pdisposition === 'CONFIRMED') {
           prediction = 'confirmed';
@@ -383,12 +384,11 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
         isAnalyzing: false, 
         prediction: prediction,
         flaskResponse: {
+          is_exoplanet: result.is_exoplanet,
           koi_pdisposition: result.koi_pdisposition,
-          prediction: result.planet_type, 
           probability: result.probability,
           status: 'success',
-          timestamp: new Date().toISOString(), 
-          is_exoplanet: result.is_exoplanet
+          timestamp: new Date().toISOString()
         }
       });
 
@@ -684,6 +684,12 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
                     </div>
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between">
+                        <span className="text-gray-400">Is Exoplanet:</span>
+                        <span className={`font-medium ${planet.claudeResponse.is_exoplanet ? 'text-green-300' : 'text-red-300'}`}>
+                          {planet.claudeResponse.is_exoplanet ? '✅ Yes' : '❌ No'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
                         <span className="text-gray-400">Disposition:</span>
                         <span className="text-blue-300 font-medium">{planet.claudeResponse.disposition}</span>
                       </div>
@@ -697,15 +703,9 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
                           <span className="text-blue-300 font-medium">{planet.claudeResponse.planet_type}</span>
                         </div>
                       )}
-                      {planet.claudeResponse.habitability_assessment && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Habitability:</span>
-                          <span className="text-blue-300 font-medium">{planet.claudeResponse.habitability_assessment}</span>
-                        </div>
-                      )}
                       {planet.claudeResponse.reasoning && (
                         <div className="mt-2 pt-2 border-t border-blue-700/30">
-                          <div className="text-gray-400 mb-1">Reasoning:</div>
+                          <div className="text-gray-400 mb-1">Analysis:</div>
                           <div className="text-blue-200 text-xs leading-relaxed">{planet.claudeResponse.reasoning}</div>
                         </div>
                       )}
@@ -732,21 +732,11 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
                         <span className="text-green-300 font-medium">{planet.flaskResponse.koi_pdisposition}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Planet Type:</span>
-                        <span className="text-green-300 font-medium">{planet.flaskResponse.prediction}</span>
-                      </div>
-                      <div className="flex justify-between">
                         <span className="text-gray-400">Probability:</span>
                         <span className="text-green-300 font-medium">{(planet.flaskResponse.probability * 100).toFixed(1)}%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Confidence:</span>
-                        <span className={`font-medium ${planet.flaskResponse.probability > 0.8 ? 'text-green-300' : planet.flaskResponse.probability > 0.6 ? 'text-yellow-300' : 'text-red-300'}`}>
-                          {planet.flaskResponse.probability > 0.8 ? 'High' : planet.flaskResponse.probability > 0.6 ? 'Medium' : 'Low'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Timestamp:</span>
+                        <span className="text-gray-400">Analyzed:</span>
                         <span className="text-green-300 font-medium text-xs">
                           {new Date(planet.flaskResponse.timestamp).toLocaleTimeString()}
                         </span>
@@ -765,20 +755,26 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
                     <div className="grid grid-cols-2 gap-3 text-xs">
                       <div>
                         <div className="text-gray-400">Claude AI</div>
-                        <div className="text-blue-300 font-medium">
+                        <div className={`font-medium ${planet.claudeResponse.is_exoplanet ? 'text-green-300' : 'text-red-300'}`}>
+                          {planet.claudeResponse.is_exoplanet ? '✅ Exoplanet' : '❌ Not Exoplanet'}
+                        </div>
+                        <div className="text-blue-300 text-xs mt-1">
                           {planet.claudeResponse.disposition} ({(planet.claudeResponse.confidence * 100).toFixed(0)}%)
                         </div>
                       </div>
                       <div>
                         <div className="text-gray-400">ML Model</div>
-                        <div className="text-green-300 font-medium">
+                        <div className={`font-medium ${planet.flaskResponse.is_exoplanet ? 'text-green-300' : 'text-red-300'}`}>
+                          {planet.flaskResponse.is_exoplanet ? '✅ Exoplanet' : '❌ Not Exoplanet'}
+                        </div>
+                        <div className="text-green-300 text-xs mt-1">
                           {planet.flaskResponse.koi_pdisposition} ({(planet.flaskResponse.probability * 100).toFixed(0)}%)
                         </div>
                       </div>
                     </div>
                     <div className="mt-2 text-xs text-gray-400 text-center">
-                      {planet.claudeResponse.disposition.toLowerCase() === planet.flaskResponse.koi_pdisposition.toLowerCase() 
-                        ? '✅ Both models agree' 
+                      {planet.claudeResponse.is_exoplanet === planet.flaskResponse.is_exoplanet 
+                        ? '✅ Both models agree on exoplanet status' 
                         : '⚠️ Models disagree - further analysis recommended'}
                     </div>
                   </div>

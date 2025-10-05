@@ -722,7 +722,7 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
                         <span className="text-orange-300 font-medium">{planet.flaskResponse.planet_type}</span>
                       </div>
                       {planet.flaskResponse.tfopwg_disp_explanation && (
-                        <div className="mt-2">
+                        <div className="flex justify-between">
                           <span className="text-gray-400">Explanation:</span>
                           <p className="text-orange-200 text-xs mt-1 leading-tight">{planet.flaskResponse.tfopwg_disp_explanation}</p>
                         </div>

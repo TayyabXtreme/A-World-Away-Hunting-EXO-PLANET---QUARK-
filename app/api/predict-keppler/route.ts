@@ -97,7 +97,7 @@ REQUIRED OUTPUT FORMAT (respond with EXACTLY this JSON structure):
   "disposition": "CONFIRMED" | "CANDIDATE" | "FALSE POSITIVE",
   "confidence": [number between 0.0 and 1.0],
   "reasoning": "[brief scientific explanation]",
-  "habitability_assessment": "[assessment of potential habitability]",
+  "is_exoplanet": [boolean: true if confirmed/candidate exoplanet, false if false positive],
   "planet_type": "[classification: Earth-like, Super-Earth, Sub-Neptune, or Gas Giant]"
 }
 
@@ -142,7 +142,7 @@ Based on the scientific analysis of these parameters, what is your assessment? C
         disposition: analysisResult.disposition,
         confidence: analysisResult.confidence,
         reasoning: analysisResult.reasoning,
-        habitability_assessment: analysisResult.habitability_assessment || 'Not assessed',
+        is_exoplanet: analysisResult.is_exoplanet !== undefined ? analysisResult.is_exoplanet : (analysisResult.disposition !== 'FALSE POSITIVE'),
         planet_type: analysisResult.planet_type || 'Unknown',
         ai_analysis: true,
         parameters_analyzed: {
