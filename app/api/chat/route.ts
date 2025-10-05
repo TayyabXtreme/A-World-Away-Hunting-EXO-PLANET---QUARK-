@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextRequest, NextResponse } from 'next/server';
 
-const apiKey = "AIzaSyAhwQ3w00c32wcEJQ5j6M3Ey1ZwKnFthUw";
+const apiKey = process.env.NEXT_GEMINI_AI_KEY;
 
 if (!apiKey) {
   console.error('NEXT_GEMINI_AI_KEY is not set in environment variables');
