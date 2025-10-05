@@ -629,13 +629,13 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPa
                 onClick={handleFlaskAnalyze}
                 disabled={planet.isAnalyzing}
                 variant="outline"
-                className="w-full border-orange-500/30 text-orange-300 hover:bg-orange-500/10 
-                  hover:border-orange-400/50 font-medium py-2.5 rounded-lg transition-all duration-200
+                className="w-full bg-white hover:bg-white border-orange-500 text-orange-300 
+                  hover:border-orange-400 font-medium py-2.5 rounded-lg transition-all duration-200
                   disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {planet.isAnalyzing ? (
                   <div className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-orange-300/30 border-t-orange-300 rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-orange-300 border-t-orange-300 rounded-full animate-spin" />
                     <span>Processing with ML Model...</span>
                   </div>
                 ) : (
