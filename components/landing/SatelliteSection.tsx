@@ -39,7 +39,7 @@ const missions = [
     id: 'k2',
     name: 'K2',
     subtitle: 'Extended ML Pipeline',
-    description: 'Advanced neural networks for multi-field exoplanet prediction.',
+    description: 'Advanced neural networks for multi-field exoplanet prediction.\n',
     route: '/k2',
     period: '2014-2018',
     discoveries: '500+',
@@ -155,9 +155,7 @@ export default function SatelliteSection() {
                     <p className="text-xs text-slate-500 mb-2 h-[32px]">
                       {mission.subtitle}
                     </p>
-                    <p className="text-xs text-slate-400 leading-relaxed">
-                      {mission.description}
-                    </p>
+                   
                   </div>
 
                   {/* ML Features */}

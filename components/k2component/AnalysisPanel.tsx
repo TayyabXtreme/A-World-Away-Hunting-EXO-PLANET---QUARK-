@@ -765,11 +765,11 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPa
             {/* Tabs for Manual / CSV Mode */}
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'manual' | 'csv')} className="w-full">
               <TabsList className="grid w-full grid-cols-2 bg-gray-800/60">
-                <TabsTrigger value="manual" className="data-[state=active]:bg-orange-600">
+                <TabsTrigger value="manual" className="data-[state=active]:bg-orange-600 text-white">
                   <Activity className="h-4 w-4 mr-2" />
                   Manual Input
                 </TabsTrigger>
-                <TabsTrigger value="csv" className="data-[state=active]:bg-orange-600">
+                <TabsTrigger value="csv" className="data-[state=active]:bg-orange-600 text-white">
                   <FileSpreadsheet className="h-4 w-4 mr-2" />
                   CSV Upload
                 </TabsTrigger>

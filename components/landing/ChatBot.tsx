@@ -226,23 +226,30 @@ export default function ChatBot() {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed bottom-6 right-6 z-50"
+            className="fixed bottom-20 right-8 z-50"
           >
             <Button
               onClick={() => setIsOpen(true)}
-              className="relative h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-cyan-500 hover:from-blue-600 hover:via-purple-600 hover:to-cyan-600 shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 border-2 border-white/20 group"
+              className="relative h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-cyan-500 hover:from-blue-600 hover:via-purple-600 hover:to-cyan-600 shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 border-2 border-white/20 group hover:scale-110"
             >
               {/* Pulsing glow effect */}
               <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 opacity-50 blur-xl group-hover:opacity-75 transition-opacity duration-300 animate-pulse"></div>
               
-              {/* AI Icon */}
-              <div className="relative z-10">
-                <Sparkles className="h-7 w-7 text-white animate-pulse" />
+              <div className="relative z-10 flex items-center justify-center">
+                <Bot className="h-9 w-9 text-white" strokeWidth={2.5} />
               </div>
               
               {/* Orbiting particles */}
               <div className="absolute inset-0 rounded-full">
                 <div className="absolute top-0 left-1/2 w-2 h-2 bg-white rounded-full -translate-x-1/2 animate-[spin_3s_linear_infinite]"></div>
+                <div className="absolute bottom-0 left-1/2 w-1.5 h-1.5 bg-cyan-300 rounded-full -translate-x-1/2 animate-[spin_3s_linear_infinite_reverse]"></div>
+              </div>
+              
+              {/* AI Label */}
+              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                <span className="text-xs font-semibold text-white/80 bg-slate-900/80 px-2 py-1 rounded-full border border-blue-500/30 backdrop-blur-sm">
+                  AI Assistant
+                </span>
               </div>
             </Button>
           </motion.div>
