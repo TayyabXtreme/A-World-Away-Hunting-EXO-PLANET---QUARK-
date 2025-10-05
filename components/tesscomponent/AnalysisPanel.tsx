@@ -354,15 +354,17 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
     
       let prediction: 'confirmed' | 'false-positive' | 'candidate';
       
-     
-      if (result.is_exoplanet === true) {
-        if (result.tess_disposition === 'CP' || result.tess_disposition === 'PC') {
-          prediction = 'confirmed';
-        } else {
-          prediction = 'candidate';
-        }
-      } else {
+      // Determine prediction based on tfopwg_disp
+      // CP (Confirmed Planet), KP (Known Planet) -> confirmed
+      // FP (False Positive), FA (False Alarm) -> false-positive
+      // PC (Planetary Candidate), APC (Ambiguous Planetary Candidate) -> candidate
+      if (result.tfopwg_disp === 'CP' || result.tfopwg_disp === 'KP') {
+        prediction = 'confirmed';
+      } else if (result.tfopwg_disp === 'FP' || result.tfopwg_disp === 'FA') {
         prediction = 'false-positive';
+      } else {
+        // PC, APC, or other
+        prediction = 'candidate';
       }
 
    
@@ -370,12 +372,12 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
         isAnalyzing: false, 
         prediction: prediction,
         flaskResponse: {
-          tess_disposition: result.tess_disposition,
-          prediction: result.planet_type || result.prediction,
+          tfopwg_disp: result.tfopwg_disp,
+          tfopwg_disp_explanation: result.tfopwg_disp_explanation,
+          planet_type: result.planet_type,
           probability: result.probability,
           status: 'success',
-          timestamp: new Date().toISOString(),
-          is_exoplanet: result.is_exoplanet
+          timestamp: new Date().toISOString()
         }
       });
 
@@ -708,21 +710,23 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
                     </div>
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Disposition:</span>
-                        <span className="text-orange-300 font-medium">{planet.flaskResponse.tess_disposition}</span>
+                        <span className="text-gray-400">TFOPWG Disposition:</span>
+                        <span className="text-orange-300 font-medium">{planet.flaskResponse.tfopwg_disp}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Probability:</span>
                         <span className="text-orange-300 font-medium">{(planet.flaskResponse.probability * 100).toFixed(1)}%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Prediction:</span>
-                        <span className="text-orange-300 font-medium">{planet.flaskResponse.prediction}</span>
+                        <span className="text-gray-400">Planet Type:</span>
+                        <span className="text-orange-300 font-medium">{planet.flaskResponse.planet_type}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Is Exoplanet:</span>
-                        <span className="text-orange-300 font-medium">{planet.flaskResponse.is_exoplanet ? 'Yes' : 'No'}</span>
-                      </div>
+                      {planet.flaskResponse.tfopwg_disp_explanation && (
+                        <div className="mt-2">
+                          <span className="text-gray-400">Explanation:</span>
+                          <p className="text-orange-200 text-xs mt-1 leading-tight">{planet.flaskResponse.tfopwg_disp_explanation}</p>
+                        </div>
+                      )}
                       <div className="flex justify-between">
                         <span className="text-gray-400">Analyzed:</span>
                         <span className="text-orange-300 font-medium">{new Date(planet.flaskResponse.timestamp).toLocaleTimeString()}</span>

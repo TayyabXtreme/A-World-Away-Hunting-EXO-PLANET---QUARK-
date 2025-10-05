@@ -31,12 +31,12 @@ export interface TessPlanetData {
   prediction?: 'confirmed' | 'false-positive' | 'candidate' | null;
   isAnalyzing?: boolean;
   flaskResponse?: {
-    tess_disposition: string;
-    prediction: string;
+    tfopwg_disp: string;
+    tfopwg_disp_explanation: string;
+    planet_type: string;
     probability: number;
     status: string;
     timestamp: string;
-    is_exoplanet?: boolean;
   };
   claudeResponse?: {
     disposition: string;
