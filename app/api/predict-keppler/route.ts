@@ -4,7 +4,7 @@ import {
   ConverseCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 
-// Configure the AWS Bedrock client
+
 const client = new BedrockRuntimeClient({
    region: process.env.AWS_REGION!,
   credentials: {
@@ -13,7 +13,7 @@ const client = new BedrockRuntimeClient({
   },
 });
 
-// Use Claude model
+
 const modelId = "us.anthropic.claude-3-5-sonnet-20241022-v2:0";
 
 export async function POST(request: NextRequest) {
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
     
-    // Extract the planet parameters
+   
     const {
       koi_score,
       koi_period,
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       koi_srho
     } = data;
 
-    // Create comprehensive prompt for Claude AI
+    
     const prompt = `You are an expert exoplanet astronomer analyzing Kepler Objects of Interest (KOI) data. Please analyze the following exoplanet parameters and provide a scientific assessment.
 
 EXOPLANET PARAMETERS:
@@ -86,7 +86,7 @@ Based on the scientific analysis of these parameters, what is your assessment? C
       messages: [{ role: "user", content: [{ text: prompt }] }],
       inferenceConfig: {
         maxTokens: 1000,
-        temperature: 0.1, // Low temperature for consistent scientific analysis
+        temperature: 0.1,
       },
     });
 
@@ -100,21 +100,18 @@ Based on the scientific analysis of these parameters, what is your assessment? C
     console.log('Claude AI Analysis:', responseText);
 
     try {
-      // Parse Claude's JSON response
       const analysisResult = JSON.parse(responseText);
       
-      // Validate the response structure
       if (!analysisResult.disposition || !analysisResult.confidence || !analysisResult.reasoning) {
         throw new Error('Invalid response format from Claude');
       }
 
-      // Ensure disposition is in correct format
       const validDispositions = ['CONFIRMED', 'CANDIDATE', 'FALSE POSITIVE'];
       if (!validDispositions.includes(analysisResult.disposition)) {
-        analysisResult.disposition = 'CANDIDATE'; // Default fallback
+        analysisResult.disposition = 'CANDIDATE'; 
       }
 
-      // Ensure confidence is within valid range
+      
       analysisResult.confidence = Math.max(0.0, Math.min(1.0, analysisResult.confidence));
 
       return NextResponse.json({
@@ -146,7 +143,7 @@ Based on the scientific analysis of these parameters, what is your assessment? C
       console.error('Error parsing Claude response:', parseError);
       console.log('Raw Claude response:', responseText);
       
-      // Fallback: Extract key information from text response
+      
       const disposition = responseText.toLowerCase().includes('confirmed') ? 'CONFIRMED' :
                          responseText.toLowerCase().includes('false positive') ? 'FALSE POSITIVE' : 'CANDIDATE';
       

@@ -50,18 +50,17 @@ Your answer:`;
     try {
       const prompt = createPrompt(data);
       
-      // Use the existing Claude AWS helper function
+   
       const responseText = await askClaude(prompt);
       
       if (!responseText) {
         throw new Error('No response from Claude');
       }
 
-      // Parse Claude's response - expecting just one word
+     
       const cleanResponse = responseText.trim().toUpperCase();
       
-      // Extract the disposition word
-      let disposition = "CANDIDATE"; // default
+      let disposition = "CANDIDATE"; 
       if (cleanResponse.includes("CONFIRMED")) {
         disposition = "CONFIRMED";
       } else if (cleanResponse.includes("FALSE POSITIVE")) {
@@ -72,7 +71,7 @@ Your answer:`;
 
       return {
         disposition,
-        confidence: 0.85, // Default confidence since we're not asking Claude for this
+        confidence: 0.85, 
         reasoning: `AI prediction: ${disposition}`,
       };
     } catch (err) {
@@ -96,7 +95,7 @@ Your answer:`;
         const data = dataArray[i];
         
         try {
-          // Reset loading state temporarily for individual predictions
+          
           setLoading(false);
           const result = await predictSingle(data);
           setLoading(true);
@@ -118,7 +117,7 @@ Your answer:`;
           });
         }
         
-        // Small delay to avoid overwhelming the API
+      
         if (i < dataArray.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 1000));
         }

@@ -7,41 +7,68 @@ import { Separator } from '@/components/ui/separator';
 import { Github, Twitter, Linkedin, Mail, Star, Rocket, ExternalLink } from 'lucide-react';
 
 const socialLinks = [
-  { icon: <Github className="h-5 w-5" />, label: 'GitHub', href: '#' },
-  { icon: <Twitter className="h-5 w-5" />, label: 'Twitter', href: '#' },
-  { icon: <Linkedin className="h-5 w-5" />, label: 'LinkedIn', href: '#' },
-  { icon: <Mail className="h-5 w-5" />, label: 'Email', href: '#' }
+  { icon: <Github className="h-5 w-5" />, label: 'GitHub', href: 'https://github.com/TayyabXtreme/A-World-Away-Hunting-EXO-PLANET---QUARK-' },
+  { icon: <Linkedin className="h-5 w-5" />, label: 'LinkedIn', href: 'https://www.linkedin.com/in/muhammad-tayyab-xtreme' },
+  { icon: <Mail className="h-5 w-5" />, label: 'Email', href: 'mailto:tayyabxtrem@gmail.com' }
 ];
 
 const quickLinks = [
-  { name: "Kepler Mission", href: "/kepler_prid" },
-  { name: "K2 Mission", href: "/k2_prid" },
-  { name: "TESS Survey", href: "/3dVisual" },
+  { name: "Kepler Analysis", href: "/kepler" },
+  { name: "K2 Analysis", href: "/k2" },
+  { name: "TESS Analysis", href: "/tess" },
   { name: "Dataset Explorer", href: "/dataSetVisualize" }
 ];
 
 const resources = [
-  { name: "Documentation", href: "#" },
-  { name: "API Reference", href: "#" },
+  { name: "NASA Space Apps", href: "https://www.spaceappschallenge.org/" },
+  { name: "NASA Exoplanet Archive", href: "https://exoplanetarchive.ipac.caltech.edu/" },
   { name: "Research Papers", href: "#" },
-  { name: "Support Center", href: "#" }
+  { name: "Contact", href: "mailto:tayyabxtrem@gmail.com" }
 ];
 
 export default function Footer() {
   return (
-    <footer className="bg-black border-t border-slate-800">
-      <div className="container mx-auto px-6 py-16">
+    <footer className="relative bg-black border-t border-slate-800/50 overflow-hidden">
+      {/* Space Background Effects */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-slate-950 to-slate-900"></div>
+        {/* Twinkling Stars */}
+        {Array.from({ length: 40 }).map((_, i) => {
+          // Use deterministic values based on index to avoid hydration issues
+          const leftPos = (i * 9) % 100;
+          const topPos = (i * 13) % 100;
+          const delay = (i % 6) * 0.5;
+          const duration = 2 + ((i % 3) + 1);
+          
+          return (
+            <div
+              key={i}
+              className="absolute w-0.5 h-0.5 bg-white rounded-full animate-pulse"
+              style={{
+                left: `${leftPos}%`,
+                top: `${topPos}%`,
+                animationDelay: `${delay}s`,
+                animationDuration: `${duration}s`,
+              }}
+            />
+          );
+        })}
+        {/* Cosmic Glow */}
+        <div className="absolute bottom-0 left-1/4 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-0 right-1/4 w-48 h-48 bg-purple-500/5 rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="container mx-auto px-6 py-12 relative z-10">
         {/* Main Footer Content */}
-        <div className="grid md:grid-cols-4 gap-8 mb-12">
+        <div className="grid md:grid-cols-3 gap-8 mb-8">
           {/* Brand Section */}
-          <div className="md:col-span-2">
-            <div className="mb-6">
-              <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
+          <div>
+            <div className="mb-4">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
                 EXOQUARK
               </h3>
-              <p className="text-slate-400 text-lg leading-relaxed max-w-md">
-                Advanced exoplanet discovery through AI-powered analysis and interactive 3D visualization. 
-                Explore the cosmos with cutting-edge technology.
+              <p className="text-slate-400 text-sm leading-relaxed">
+                AI-powered exoplanet discovery platform for NASA Space Apps Challenge 2025
               </p>
             </div>
 
@@ -53,9 +80,9 @@ export default function Footer() {
                   variant="outline"
                   size="icon"
                   asChild
-                  className="border-slate-700 hover:border-slate-600 hover:bg-slate-800 text-slate-400 hover:text-white"
+                  className="border-slate-700/50 hover:border-slate-600 hover:bg-slate-800/50 text-slate-400 hover:text-white backdrop-blur-sm"
                 >
-                  <a href={social.href} aria-label={social.label}>
+                  <a href={social.href} aria-label={social.label} target="_blank" rel="noopener noreferrer">
                     {social.icon}
                   </a>
                 </Button>
@@ -65,15 +92,15 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-lg font-semibold text-white mb-6">Explore Missions</h4>
-            <ul className="space-y-3">
+            <h4 className="text-base font-semibold text-white mb-4">AI Analysis</h4>
+            <ul className="space-y-2">
               {quickLinks.map((link, index) => (
                 <li key={index}>
                   <a
                     href={link.href}
-                    className="text-slate-400 hover:text-white transition-colors duration-200 flex items-center group"
+                    className="text-slate-400 hover:text-white transition-colors duration-200 flex items-center group text-sm"
                   >
-                    <Star className="h-3 w-3 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                    <Star className="h-3 w-3 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-blue-400" />
                     {link.name}
                   </a>
                 </li>
@@ -83,15 +110,17 @@ export default function Footer() {
 
           {/* Resources */}
           <div>
-            <h4 className="text-lg font-semibold text-white mb-6">Resources</h4>
-            <ul className="space-y-3">
+            <h4 className="text-base font-semibold text-white mb-4">Resources</h4>
+            <ul className="space-y-2">
               {resources.map((link, index) => (
                 <li key={index}>
                   <a
                     href={link.href}
-                    className="text-slate-400 hover:text-white transition-colors duration-200 flex items-center group"
+                    target={link.href.startsWith('http') ? '_blank' : '_self'}
+                    rel={link.href.startsWith('http') ? 'noopener noreferrer' : ''}
+                    className="text-slate-400 hover:text-white transition-colors duration-200 flex items-center group text-sm"
                   >
-                    <ExternalLink className="h-3 w-3 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                    <ExternalLink className="h-3 w-3 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-purple-400" />
                     {link.name}
                   </a>
                 </li>
@@ -100,55 +129,18 @@ export default function Footer() {
           </div>
         </div>
 
-        <Separator className="bg-slate-800 mb-8" />
+        <Separator className="bg-slate-800/50 mb-6" />
 
-        {/* Stats Card */}
-        <Card className="bg-slate-900/50 border-slate-800 mb-8">
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-              <div>
-                <div className="text-2xl font-bold text-white mb-1">5,000+</div>
-                <div className="text-slate-400 text-sm">Confirmed Exoplanets</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-white mb-1">3</div>
-                <div className="text-slate-400 text-sm">Space Missions</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-white mb-1">Real-time</div>
-                <div className="text-slate-400 text-sm">Data Updates</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-white mb-1">AI</div>
-                <div className="text-slate-400 text-sm">Powered Analysis</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+     
 
         {/* Bottom Bar */}
-        <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-          <div className="text-slate-400 text-sm">
-            © 2025 ExoQuark. Built for space exploration enthusiasts.
+        <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
+          <div className="text-slate-500 text-xs">
+            © 2025 ExoQuark • NASA Space Apps Challenge 2025
           </div>
-          <div className="flex items-center space-x-6 text-sm text-slate-400">
-            <a href="#" className="hover:text-white transition-colors duration-200">
-              Privacy Policy
-            </a>
-            <a href="#" className="hover:text-white transition-colors duration-200">
-              Terms of Service
-            </a>
-            <a href="#" className="hover:text-white transition-colors duration-200">
-              Contact
-            </a>
+          <div className="text-xs text-slate-600">
+            Built with Next.js • Data: NASA Exoplanet Archive
           </div>
-        </div>
-
-        {/* Credits */}
-        <div className="text-center mt-8 pt-8 border-t border-slate-800/50">
-          <p className="text-xs text-slate-500">
-            Data sources: NASA Exoplanet Archive • AI: Claude 3.5 Sonnet • Built with Next.js & Tailwind CSS
-          </p>
         </div>
       </div>
     </footer>

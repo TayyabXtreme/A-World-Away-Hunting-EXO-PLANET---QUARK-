@@ -269,3 +269,7 @@
 .input-focus:focus-within::after {
   width: 100%;
 }
+
+html{
+  background-color: black;
+}

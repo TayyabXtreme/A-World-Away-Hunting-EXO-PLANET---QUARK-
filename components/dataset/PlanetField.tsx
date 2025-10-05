@@ -18,7 +18,7 @@ export default function PlanetField({ planets, selectedPlanet, onPlanetSelect }:
   const { raycaster, mouse, camera } = useThree();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  // Create instances for planets
+  
   const { positions,  scales, planetMap } = useMemo(() => {
     const tempObject = new Object3D();
     const positionsArray: Vector3[] = [];
@@ -28,12 +28,10 @@ export default function PlanetField({ planets, selectedPlanet, onPlanetSelect }:
 
     planets.forEach((planet) => {
       if (planet.x !== undefined && planet.y !== undefined && planet.z !== undefined) {
-        // Position
         tempObject.position.set(planet.x, planet.y, planet.z);
         tempObject.updateMatrix();
         positionsArray.push(new Vector3(planet.x, planet.y, planet.z));
 
-        // Color based on temperature
         const color = getPlanetColor(planet.temperature);
         const colorValues = [
           parseInt(color.slice(1, 3), 16) / 255,
@@ -42,7 +40,6 @@ export default function PlanetField({ planets, selectedPlanet, onPlanetSelect }:
         ];
         colorsArray.push(colorValues);
 
-        // Scale based on radius
         const scale = getPlanetSize(planet.radius);
         scalesArray.push(scale);
 
@@ -58,7 +55,6 @@ export default function PlanetField({ planets, selectedPlanet, onPlanetSelect }:
     };
   }, [planets]);
 
-  // Handle click events
   const handleClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     
@@ -78,7 +74,7 @@ export default function PlanetField({ planets, selectedPlanet, onPlanetSelect }:
     }
   };
 
-  // Handle hover effects
+  
   const handlePointerMove = (event: React.PointerEvent) => {
     event.stopPropagation();
     
@@ -97,30 +93,27 @@ export default function PlanetField({ planets, selectedPlanet, onPlanetSelect }:
     }
   };
 
-  // Animation loop
   useFrame((state) => {
     if (!meshRef.current || !glowMeshRef.current) return;
 
     const time = state.clock.getElapsedTime();
     const tempObject = new Object3D();
 
-    // Update planet instances
+  
     positions.forEach((position, index) => {
       const planet = planetMap[index];
       const isSelected = selectedPlanet?.id === planet.id;
       const isHovered = hoveredIndex === index;
 
-      // Base scale
+
       let scale = scales[index];
 
-      // Enhance selected/hovered planets
       if (isSelected) {
-        scale *= 1.5 + Math.sin(time * 3) * 0.2; // Pulsing effect
+        scale *= 1.5 + Math.sin(time * 3) * 0.2; 
       } else if (isHovered) {
         scale *= 1.2;
       }
 
-      // Add gentle floating animation
       const floatOffset = Math.sin(time * 0.5 + index * 0.1) * 0.1;
       
       tempObject.position.set(
@@ -132,8 +125,6 @@ export default function PlanetField({ planets, selectedPlanet, onPlanetSelect }:
       tempObject.updateMatrix();
       
       meshRef.current!.setMatrixAt(index, tempObject.matrix);
-
-      // Update glow effect
       const glowScale = scale * (isSelected ? 2.5 : isHovered ? 2.0 : 1.8);
       tempObject.scale.setScalar(glowScale);
       tempObject.updateMatrix();
@@ -149,19 +140,7 @@ export default function PlanetField({ planets, selectedPlanet, onPlanetSelect }:
   return (
     <group>
       {/* Glow effect (rendered first, behind planets) */}
-      <instancedMesh
-        ref={glowMeshRef}
-        args={[undefined, undefined, positions.length]}
-        onClick={handleClick}
-        onPointerMove={handlePointerMove}
-      >
-        <sphereGeometry args={[1, 16, 12]} />
-        <meshBasicMaterial
-          transparent
-          opacity={0.3}
-          color="#ffffff"
-        />
-      </instancedMesh>
+     
 
       {/* Main planet spheres */}
       <instancedMesh

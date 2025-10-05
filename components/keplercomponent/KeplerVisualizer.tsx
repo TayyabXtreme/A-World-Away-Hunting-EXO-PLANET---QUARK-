@@ -27,12 +27,10 @@ export interface PlanetData {
   koi_steff: number;
   koi_slogg: number;
   koi_srad: number;
-  // Additional parameters
   koi_model_snr: number;
   koi_srho: number;
   prediction?: 'confirmed' | 'false-positive' | 'candidate' | null;
   isAnalyzing?: boolean;
-  // Flask API response data
   flaskResponse?: {
     koi_pdisposition: string;
     prediction: string;
@@ -41,7 +39,6 @@ export interface PlanetData {
     timestamp: string;
     is_exoplanet?: boolean;
   };
-  // Claude AI response data  
   claudeResponse?: {
     disposition: string;
     confidence: number;
@@ -216,9 +213,9 @@ export default function KeplerVisualizer() {
   }, [planets, selectedPlanet]);
 
   const handleAnalyzePlanet = useCallback(async () => {
-    // Set analyzing state
+    
     handleUpdatePlanet({ isAnalyzing: true });
-    // The actual API call will be handled by the AnalysisPanel
+    
   }, [handleUpdatePlanet]);
 
   return (
@@ -277,7 +274,7 @@ export default function KeplerVisualizer() {
       </Canvas>
 
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-10 p-6">
+      <div className="absolute top-0 left-0 right-0 z-10 p-6 mt-16">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl border border-blue-400/30 backdrop-blur-sm">

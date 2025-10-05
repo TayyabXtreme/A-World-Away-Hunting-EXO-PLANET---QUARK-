@@ -260,7 +260,6 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPa
 
       const result = await response.json();
       
-      // Map API response to our prediction format
       let prediction: 'confirmed' | 'false-positive' | 'candidate';
       if (result.disposition === 'CONFIRMED') {
         prediction = 'confirmed';
@@ -270,7 +269,6 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPa
         prediction = 'candidate';
       }
 
-      // Update planet with result
       onUpdate({ 
         isAnalyzing: false, 
         prediction: prediction,
@@ -287,7 +285,6 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPa
       console.error('Analysis failed:', error);
       onUpdate({ isAnalyzing: false });
       
-      // Show specific error message to user
       const errorMessage = error instanceof Error ? error.message : 'Analysis failed';
       alert(`Claude AI Analysis Error: ${errorMessage}`);
     }
@@ -295,7 +292,6 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPa
 
   const handleFlaskAnalyze = async () => {
     try {
-      // Set analyzing state for Flask analysis
       onUpdate({ isAnalyzing: true });
 
       const payload = {
@@ -335,10 +331,8 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPa
       const result = await response.json();
       console.log('Flask API Response:', result);
       
-      // Map Flask API response to our prediction format
       let prediction: 'confirmed' | 'false-positive' | 'candidate';
       
-      // Map based on archive_disposition from Flask response
       if (result.archive_disposition === 'CONFIRMED') {
         prediction = 'confirmed';
       } else if (result.archive_disposition === 'FALSE POSITIVE') {
@@ -346,11 +340,9 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPa
       } else if (result.archive_disposition === 'CANDIDATE') {
         prediction = 'candidate';
       } else {
-        // Default to candidate for unknown dispositions
         prediction = 'candidate';
       }
 
-      // Update planet with Flask result and store response data
       onUpdate({ 
         isAnalyzing: false, 
         prediction: prediction,
@@ -367,7 +359,6 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate }: AnalysisPa
       console.error('Flask analysis failed:', error);
       onUpdate({ isAnalyzing: false });
       
-      // Show error message to user
       alert(`Flask API Error: ${error instanceof Error ? error.message : 'Connection failed. Make sure Flask server is running on http://127.0.0.1:5000'}`);
     }
   };

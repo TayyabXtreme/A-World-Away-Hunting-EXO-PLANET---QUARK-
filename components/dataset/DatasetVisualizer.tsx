@@ -27,7 +27,7 @@ export default function DatasetVisualizer() {
   const [showDetails, setShowDetails] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Load and unify datasets
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -49,7 +49,6 @@ export default function DatasetVisualizer() {
     loadData();
   }, []);
 
-  // Filter planets based on telescope and search query
   const filteredPlanets = state.planets.filter(planet => {
     const matchesFilter = state.filter === 'All' || planet.telescope === state.filter;
     const matchesSearch = !state.searchQuery || 
@@ -68,7 +67,6 @@ export default function DatasetVisualizer() {
 
   const handleFilterChange = useCallback((filter: TelescopeFilter) => {
     setState(prev => {
-      // Check if currently selected planet would still be visible with new filter
       const newFilteredPlanets = prev.planets.filter(planet => {
         const matchesFilter = filter === 'All' || planet.telescope === filter;
         const matchesSearch = !prev.searchQuery || 
@@ -77,13 +75,13 @@ export default function DatasetVisualizer() {
         return matchesFilter && matchesSearch;
       });
       
-      // Only deselect planet if it's no longer visible
+
       const selectedPlanetStillVisible = prev.selectedPlanet && 
         newFilteredPlanets.some(p => p.id === prev.selectedPlanet?.id);
       
       const newSelectedPlanet = selectedPlanetStillVisible ? prev.selectedPlanet : null;
       
-      // Update details panel visibility
+ 
       if (!newSelectedPlanet) {
         setShowDetails(false);
       }
@@ -148,7 +146,7 @@ export default function DatasetVisualizer() {
       <AnimatePresence>
         {state.loading && (
           <LoadingOverlay 
-            progress={0} // You can implement actual progress tracking
+            progress={0} 
             message="Loading exoplanet datasets..."
           />
         )}

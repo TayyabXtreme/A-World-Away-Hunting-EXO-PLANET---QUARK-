@@ -1,5 +1,3 @@
-// Dataset types for different telescope missions
-
 export interface K2Planet {
   pl_name: string;
   hostname: string;
@@ -59,7 +57,6 @@ export interface TessPlanet {
   dec: number;
 }
 
-// Unified planet interface for visualization
 export interface UnifiedPlanet {
   id: string;
   name: string;
@@ -67,28 +64,23 @@ export interface UnifiedPlanet {
   telescope: 'K2' | 'Kepler' | 'TESS';
   disposition: string;
   
-  // Orbital properties
   period: number;
   radius: number;
   temperature: number;
   insolation: number;
   
-  // Stellar properties
   starTemp: number;
   starRadius: number;
   starMass?: number;
   
-  // Position
   ra: number;
   dec: number;
   distance: number;
   
-  // 3D position (calculated)
   x?: number;
   y?: number;
   z?: number;
   
-  // UI state
   selected?: boolean;
   highlighted?: boolean;
 }

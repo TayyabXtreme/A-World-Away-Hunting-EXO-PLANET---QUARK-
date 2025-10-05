@@ -177,7 +177,6 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
     onUpdate({ [key]: value });
   };
 
-  // Helper function to get full TESS disposition name
   const getTessDispositionName = (disposition: string) => {
     switch (disposition) {
       case 'PC': return 'PC (Planetary Candidate)';
@@ -221,18 +220,17 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
 
       const result = await response.json();
       
-      // Map TESS API response to our prediction format
       let prediction: 'confirmed' | 'false-positive' | 'candidate';
       if (result.disposition === 'CP' || result.disposition === 'KP') {
         prediction = 'confirmed';
       } else if (result.disposition === 'FP') {
         prediction = 'false-positive';
       } else {
-        // PC (Planetary Candidate) or APC (Ambiguous Planetary Candidate)
+      
         prediction = 'candidate';
       }
 
-      // Update planet with result
+     
       onUpdate({ 
         isAnalyzing: false, 
         prediction: prediction,
@@ -249,7 +247,6 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
       console.error('Analysis failed:', error);
       onUpdate({ isAnalyzing: false });
       
-      // Show specific error message to user
       const errorMessage = error instanceof Error ? error.message : 'TESS analysis failed. Please check your AWS credentials and try again.';
       alert(`Claude AI Analysis Error: ${errorMessage}`);
     }
@@ -257,7 +254,7 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
 
   const handleFlaskAnalyze = async () => {
     try {
-      // Set analyzing state for Flask analysis
+     
       onUpdate({ isAnalyzing: true });
 
       const payload = {
@@ -294,10 +291,10 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
       const result = await response.json();
       console.log('Flask API Response:', result);
       
-      // Map Flask API response to our prediction format
+    
       let prediction: 'confirmed' | 'false-positive' | 'candidate';
       
-      // Map based on is_exoplanet and tess_disposition from Flask response
+     
       if (result.is_exoplanet === true) {
         if (result.tess_disposition === 'CP' || result.tess_disposition === 'PC') {
           prediction = 'confirmed';
@@ -308,7 +305,7 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
         prediction = 'false-positive';
       }
 
-      // Update planet with Flask result and store response data
+   
       onUpdate({ 
         isAnalyzing: false, 
         prediction: prediction,
@@ -326,7 +323,7 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
       console.error('Flask analysis failed:', error);
       onUpdate({ isAnalyzing: false });
       
-      // Show error message to user
+   
       alert(`Flask API Error: ${error instanceof Error ? error.message : 'Connection failed. Make sure Flask server is running on http://127.0.0.1:5000'}`);
     }
   };

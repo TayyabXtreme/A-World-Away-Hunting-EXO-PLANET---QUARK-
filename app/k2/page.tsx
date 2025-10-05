@@ -2,8 +2,9 @@
 
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
+import SatelliteNavbar from '@/components/ui/satellite-navbar';
 
-// Dynamically import the K2Visualizer to avoid SSR issues with Three.js
+
 const K2Visualizer = dynamic(
   () => import('@/components/k2component/K2Visualizer'),
   { 
@@ -40,7 +41,8 @@ const K2Visualizer = dynamic(
 
 export default function K2Page() {
   return (
-    <div className="w-full h-screen overflow-hidden">
+    <div className="w-full h-screen overflow-hidden relative">
+      <SatelliteNavbar />
       <Suspense fallback={
         <div className="min-h-screen bg-gradient-to-br from-[#0b0f19] via-[#1a2034] to-[#0b0f19] flex items-center justify-center">
           <div className="text-center">

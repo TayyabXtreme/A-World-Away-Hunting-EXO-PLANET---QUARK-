@@ -15,23 +15,21 @@ export interface TessPlanetData {
   size: number;
   orbitRadius: number;
   speed: number;
-  // TESS-specific parameters (matching TESS_SELECTED_FEATURES)
-  pl_orbper: number;      // Orbital Period (days)
-  pl_trandurh: number;    // Transit Duration (hours)
-  pl_trandep: number;     // Transit Depth (fraction)
-  pl_rade: number;        // Planet Radius (Earth radii)
-  pl_insol: number;       // Incident Stellar Flux
-  pl_eqt: number;         // Equilibrium Temperature (K)
-  st_teff: number;        // Stellar Temperature (K)
-  st_logg: number;        // Stellar Surface Gravity
-  st_rad: number;         // Stellar Radius (Solar radii)
-  st_tmag: number;        // TESS Magnitude
-  st_dist: number;        // System Distance (parsecs)
-  ra: number;             // Right Ascension (degrees)
-  dec: number;            // Declination (degrees)
+  pl_orbper: number;      
+  pl_trandurh: number;   
+  pl_trandep: number;     
+  pl_rade: number;       
+  pl_insol: number;     
+  pl_eqt: number;       
+  st_teff: number;       
+  st_logg: number;     
+  st_rad: number;      
+  st_tmag: number;     
+  st_dist: number;    
+  ra: number;          
+  dec: number;        
   prediction?: 'confirmed' | 'false-positive' | 'candidate' | null;
   isAnalyzing?: boolean;
-  // Flask API response data
   flaskResponse?: {
     tess_disposition: string;
     prediction: string;
@@ -40,7 +38,6 @@ export interface TessPlanetData {
     timestamp: string;
     is_exoplanet?: boolean;
   };
-  // Claude AI response data  
   claudeResponse?: {
     disposition: string;
     confidence: number;
@@ -209,9 +206,9 @@ export default function TessVisualizer() {
   }, [planets, selectedPlanet]);
 
   const handleAnalyzePlanet = useCallback(async () => {
-    // Set analyzing state
+  
     handleUpdatePlanet({ isAnalyzing: true });
-    // The actual API call will be handled by the AnalysisPanel
+   
   }, [handleUpdatePlanet]);
 
   return (
@@ -270,7 +267,7 @@ export default function TessVisualizer() {
       </Canvas>
 
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-10 p-6">
+      <div className="absolute top-0 left-0 right-0 z-10 p-6 mt-16">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-xl border border-red-400/30 backdrop-blur-sm">

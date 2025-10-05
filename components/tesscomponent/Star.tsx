@@ -12,18 +12,15 @@ export default function Star() {
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
     
-    // Animate star rotation
     if (starRef.current) {
       starRef.current.rotation.y = time * 0.1;
       starRef.current.rotation.x = Math.sin(time * 0.05) * 0.1;
     }
 
-    // Animate glow pulsing
     if (glowRef.current) {
       const scale = 1 + Math.sin(time * 2) * 0.1;
       glowRef.current.scale.setScalar(scale);
       
-      // Animate glow opacity
       const material = glowRef.current.material as THREE.MeshBasicMaterial;
       material.opacity = 0.3 + Math.sin(time * 1.5) * 0.1;
     }

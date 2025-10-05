@@ -218,7 +218,6 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
 
       const result = await response.json();
       
-      // Map API response to our prediction format
       let prediction: 'confirmed' | 'false-positive' | 'candidate';
       if (result.disposition === 'CONFIRMED') {
         prediction = 'confirmed';
@@ -228,7 +227,7 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
         prediction = 'candidate';
       }
 
-      // Update planet with result
+     
       onUpdate({ 
         isAnalyzing: false, 
         prediction: prediction,
@@ -249,7 +248,6 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
 
   const handleFlaskAnalyze = async () => {
     try {
-      // Set analyzing state for Flask analysis
       onUpdate({ isAnalyzing: true });
 
       const payload = {
@@ -287,10 +285,8 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
       const result = await response.json();
       console.log('Flask API Response:', result);
       
-      // Map Flask API response to our prediction format
       let prediction: 'confirmed' | 'false-positive' | 'candidate';
       
-      // Map based on is_exoplanet and koi_pdisposition from Flask response
       if (result.is_exoplanet === true) {
         if (result.koi_pdisposition === 'CONFIRMED') {
           prediction = 'confirmed';
@@ -301,16 +297,16 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
         prediction = 'false-positive';
       }
 
-      // Update planet with Flask result and store response data
+     
       onUpdate({ 
         isAnalyzing: false, 
         prediction: prediction,
         flaskResponse: {
           koi_pdisposition: result.koi_pdisposition,
-          prediction: result.planet_type, // Use planet_type as prediction
+          prediction: result.planet_type, 
           probability: result.probability,
-          status: 'success', // Default status since not provided
-          timestamp: new Date().toISOString(), // Generate timestamp since not provided
+          status: 'success',
+          timestamp: new Date().toISOString(), 
           is_exoplanet: result.is_exoplanet
         }
       });
@@ -319,7 +315,7 @@ export default function AnalysisPanel({ planet,  onClose, onUpdate}: AnalysisPan
       console.error('Flask analysis failed:', error);
       onUpdate({ isAnalyzing: false });
       
-      // Show error message to user
+     
       alert(`Flask API Error: ${error instanceof Error ? error.message : 'Connection failed. Make sure Flask server is running on http://127.0.0.1:5000'}`);
     }
   };

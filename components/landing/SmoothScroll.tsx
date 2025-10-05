@@ -18,12 +18,11 @@ export default function SmoothScroll() {
       }
     };
 
-    // Add smooth scrolling to all anchor links
+   
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', handleSmoothScroll);
     });
 
-    // Cleanup
     return () => {
       document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.removeEventListener('click', handleSmoothScroll);

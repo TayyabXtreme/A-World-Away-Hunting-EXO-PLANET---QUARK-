@@ -4,7 +4,7 @@ import {
   ConverseCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 
-// Configure the AWS Bedrock client
+
 const client = new BedrockRuntimeClient({
   region: process.env.AWS_REGION || process.env.NEXT_AWS_REGION || 'us-east-1',
   credentials: {
@@ -13,7 +13,7 @@ const client = new BedrockRuntimeClient({
   },
 });
 
-// Check if AWS credentials are properly configured
+
 function validateAWSCredentials(): boolean {
   return !!(
     (process.env.AWS_ACCESS_KEY_ID || process.env.NEXT_AWS_ACCESS_KEY_ID) && 
@@ -22,7 +22,7 @@ function validateAWSCredentials(): boolean {
   );
 }
 
-// Use Claude model
+
 const modelId = "us.anthropic.claude-3-5-sonnet-20241022-v2:0";
 
 export async function POST(request: NextRequest) {
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
     
-    // Validate AWS credentials first
+   
     if (!validateAWSCredentials()) {
       console.log('AWS credentials not configured');
       return NextResponse.json(
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Extract the K2 planet parameters
+    
     const {
       pl_orbper,
       pl_trandep,
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       sy_dist
     } = data;
 
-    // Create comprehensive prompt for Claude AI specialized for K2 mission
+
     const prompt = `You are an expert exoplanet astronomer analyzing K2 mission data. The K2 mission was the extended mission of the Kepler Space Telescope, observing different star fields for shorter periods. Please analyze the following K2 exoplanet parameters and provide a scientific assessment.
 
 K2 EXOPLANET PARAMETERS:
@@ -137,7 +137,7 @@ Based on your scientific analysis of these K2 mission parameters, what is your a
       messages: [{ role: "user", content: [{ text: prompt }] }],
       inferenceConfig: {
         maxTokens: 1000,
-        temperature: 0.1, // Low temperature for consistent scientific analysis
+        temperature: 0.1, 
       },
     });
 
@@ -151,21 +151,21 @@ Based on your scientific analysis of these K2 mission parameters, what is your a
     console.log('Claude AI K2 Analysis:', responseText);
 
     try {
-      // Parse Claude's JSON response
+     
       const analysisResult = JSON.parse(responseText);
       
-      // Validate the response structure
+   
       if (!analysisResult.disposition || !analysisResult.confidence || !analysisResult.reasoning) {
         throw new Error('Invalid response format from Claude');
       }
 
-      // Ensure disposition is in correct format
+      
       const validDispositions = ['CONFIRMED', 'CANDIDATE', 'FALSE POSITIVE'];
       if (!validDispositions.includes(analysisResult.disposition)) {
-        analysisResult.disposition = 'CANDIDATE'; // Default fallback
+        analysisResult.disposition = 'CANDIDATE'; 
       }
 
-      // Ensure confidence is within valid range
+      
       analysisResult.confidence = Math.max(0.0, Math.min(1.0, analysisResult.confidence));
 
       return NextResponse.json({
@@ -200,7 +200,7 @@ Based on your scientific analysis of these K2 mission parameters, what is your a
       console.error('Error parsing Claude response:', parseError);
       console.log('Raw Claude response:', responseText);
       
-      // Fallback: Extract key information from text response
+  
       const disposition = responseText.toLowerCase().includes('confirmed') ? 'CONFIRMED' :
                          responseText.toLowerCase().includes('false positive') ? 'FALSE POSITIVE' : 'CANDIDATE';
       
@@ -235,7 +235,7 @@ Based on your scientific analysis of these K2 mission parameters, what is your a
   } catch (error) {
     console.error('Error in K2 exoplanet prediction API:', error);
     
-    // Check if it's an AWS credentials error
+    
     if (error instanceof Error && error.message.includes('credential')) {
       return NextResponse.json(
         { 
@@ -246,7 +246,7 @@ Based on your scientific analysis of these K2 mission parameters, what is your a
       );
     }
     
-    // Check if it's a model access error
+    
     if (error instanceof Error && error.message.includes('access')) {
       return NextResponse.json(
         { 

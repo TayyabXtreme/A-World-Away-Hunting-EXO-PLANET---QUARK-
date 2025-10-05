@@ -4,7 +4,7 @@ import {
   ConverseCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 
-// Configure the AWS Bedrock client
+
 const client = new BedrockRuntimeClient({
   region: process.env.AWS_REGION || process.env.NEXT_AWS_REGION || 'us-east-1',
   credentials: {
@@ -13,7 +13,7 @@ const client = new BedrockRuntimeClient({
   },
 });
 
-// Check if AWS credentials are properly configured
+
 function validateAWSCredentials(): boolean {
   return !!(
     (process.env.AWS_ACCESS_KEY_ID || process.env.NEXT_AWS_ACCESS_KEY_ID) && 
@@ -22,7 +22,7 @@ function validateAWSCredentials(): boolean {
   );
 }
 
-// Use Claude model
+
 const modelId = "us.anthropic.claude-3-5-sonnet-20241022-v2:0";
 
 export async function POST(request: NextRequest) {
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     const data = await request.json();
     
     
-    // Validate AWS credentials first
+   
     if (!validateAWSCredentials()) {
       console.log('❌ AWS credentials not configured');
       return NextResponse.json(
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Extract the TESS planet parameters
+
     const {
       pl_orbper,
       pl_trandurh,
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       dec
     } = data;
 
-    // Validate required parameters
+  
     const requiredParams = [
       'pl_orbper', 'pl_trandurh', 'pl_trandep', 'pl_rade', 
       'pl_insol', 'pl_eqt', 'st_teff', 'st_logg', 'st_rad', 
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
 
-    // Create comprehensive prompt for Claude AI specialized for TESS mission
+    
     const prompt = `You are an expert exoplanet astronomer analyzing TESS (Transiting Exoplanet Survey Satellite) mission data. TESS conducts an all-sky survey observing different sectors for ~27 days each, optimized for detecting short-period transiting planets around nearby bright stars. Please analyze the following TESS exoplanet parameters and provide a scientific assessment.
 
 TESS EXOPLANET PARAMETERS:
@@ -169,7 +169,7 @@ Based on your scientific analysis of these TESS mission parameters, what is your
       messages: [{ role: "user", content: [{ text: prompt }] }],
       inferenceConfig: {
         maxTokens: 1000,
-        temperature: 0.1, // Low temperature for consistent scientific analysis
+        temperature: 0.1, 
       },
     });
 
@@ -188,21 +188,20 @@ Based on your scientific analysis of these TESS mission parameters, what is your
     console.log('📝 Claude response preview:', responseText.substring(0, 200) + '...');
 
     try {
-      // Parse Claude's JSON response
+      
       const analysisResult = JSON.parse(responseText);
       
-      // Validate the response structure
+    
       if (!analysisResult.disposition || !analysisResult.confidence || !analysisResult.reasoning) {
         throw new Error('Invalid response format from Claude');
       }
 
-      // Ensure disposition is in correct TESS format
+    
       const validDispositions = ['PC', 'CP', 'FP', 'APC', 'KP'];
       if (!validDispositions.includes(analysisResult.disposition)) {
-        analysisResult.disposition = 'PC'; // Default to Planetary Candidate
+        analysisResult.disposition = 'PC'; 
       }
 
-      // Ensure confidence is within valid range
       analysisResult.confidence = Math.max(0.0, Math.min(1.0, analysisResult.confidence));
 
       return NextResponse.json({
@@ -234,8 +233,8 @@ Based on your scientific analysis of these TESS mission parameters, what is your
       console.error('Error parsing Claude response:', parseError);
       console.log('Raw Claude response:', responseText);
       
-      // Fallback: Extract key information from text response
-      let disposition = 'PC'; // Default to Planetary Candidate
+   
+      let disposition = 'PC'; 
       const lowText = responseText.toLowerCase();
       
       if (lowText.includes('confirmed') || lowText.includes(' cp ')) {
@@ -278,7 +277,6 @@ Based on your scientific analysis of these TESS mission parameters, what is your
   } catch (error) {
     console.error('Error in TESS exoplanet prediction API:', error);
     
-    // Check if it's an AWS credentials error
     if (error instanceof Error && error.message.includes('credential')) {
       return NextResponse.json(
         { 
@@ -289,7 +287,7 @@ Based on your scientific analysis of these TESS mission parameters, what is your
       );
     }
     
-    // Check if it's a model access error
+
     if (error instanceof Error && error.message.includes('access')) {
       return NextResponse.json(
         { 

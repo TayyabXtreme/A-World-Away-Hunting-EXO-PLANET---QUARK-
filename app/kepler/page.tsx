@@ -2,8 +2,8 @@
 
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
+import SatelliteNavbar from '@/components/ui/satellite-navbar';
 
-// Dynamically import the KeplerVisualizer to avoid SSR issues with Three.js
 const KeplerVisualizer = dynamic(
   () => import('@/components/keplercomponent/KeplerVisualizer'),
   { 
@@ -40,7 +40,8 @@ const KeplerVisualizer = dynamic(
 
 export default function KeplerPage() {
   return (
-    <div className="w-full h-screen overflow-hidden">
+    <div className="w-full h-screen overflow-hidden relative">
+      <SatelliteNavbar />
       <Suspense fallback={
         <div className="min-h-screen bg-gradient-to-br from-[#0b0f19] via-[#1a2034] to-[#0b0f19] flex items-center justify-center">
           <div className="text-center">

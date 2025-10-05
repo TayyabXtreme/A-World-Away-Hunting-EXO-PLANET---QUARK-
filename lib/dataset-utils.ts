@@ -1,6 +1,5 @@
 import { K2Planet, KeplerPlanet, TessPlanet, UnifiedPlanet } from './dataset-types';
 
-// Convert RA/Dec to 3D Cartesian coordinates
 function sphericalToCartesian(ra: number, dec: number, distance: number = 100): [number, number, number] {
   const raRad = (ra * Math.PI) / 180;
   const decRad = (dec * Math.PI) / 180;
@@ -12,7 +11,6 @@ function sphericalToCartesian(ra: number, dec: number, distance: number = 100): 
   return [x, y, z];
 }
 
-// Normalize data across different telescopes
 function normalizeK2Planet(planet: K2Planet, index: number): UnifiedPlanet {
   const [x, y, z] = sphericalToCartesian(planet.ra, planet.dec, planet.sy_dist / 10);
   
@@ -39,8 +37,8 @@ function normalizeK2Planet(planet: K2Planet, index: number): UnifiedPlanet {
 }
 
 function normalizeKeplerPlanet(planet: KeplerPlanet, index: number): UnifiedPlanet {
-  // Estimate distance for 3D positioning (Kepler doesn't have distance data)
-  const estimatedDistance = 100 + (index % 200); // Spread planets in layers
+
+  const estimatedDistance = 100 + (index % 200); 
   const [x, y, z] = sphericalToCartesian(planet.ra, planet.dec, estimatedDistance);
   
   return {
@@ -94,7 +92,6 @@ export async function loadAndUnifyDatasets(): Promise<UnifiedPlanet[]> {
   try {
     console.log('Loading datasets...');
     
-    // Load datasets with error handling
     const [k2Response, keplerResponse, tessResponse] = await Promise.allSettled([
       fetch('/k2.json').then(res => {
         if (!res.ok) {
@@ -116,11 +113,10 @@ export async function loadAndUnifyDatasets(): Promise<UnifiedPlanet[]> {
       })
     ]);
 
-    // Process K2 data
     if (k2Response.status === 'fulfilled') {
       const k2Data: K2Planet[] = k2Response.value;
       if (Array.isArray(k2Data)) {
-        // Limit to first 500 for performance
+       
         const k2Planets = k2Data.slice(0, 500).map(normalizeK2Planet);
         allPlanets.push(...k2Planets);
         console.log(`Loaded ${k2Planets.length} K2 planets`);
@@ -131,11 +127,10 @@ export async function loadAndUnifyDatasets(): Promise<UnifiedPlanet[]> {
       console.error('Failed to load K2 data:', k2Response.reason);
     }
 
-    // Process Kepler data
     if (keplerResponse.status === 'fulfilled') {
       const keplerData: KeplerPlanet[] = keplerResponse.value;
       if (Array.isArray(keplerData)) {
-        // Limit to first 500 for performance
+      
         const keplerPlanets = keplerData.slice(0, 500).map(normalizeKeplerPlanet);
         allPlanets.push(...keplerPlanets);
         console.log(`Loaded ${keplerPlanets.length} Kepler planets`);
@@ -146,11 +141,10 @@ export async function loadAndUnifyDatasets(): Promise<UnifiedPlanet[]> {
       console.error('Failed to load Kepler data:', keplerResponse.reason);
     }
 
-    // Process TESS data
     if (tessResponse.status === 'fulfilled') {
       const tessData: TessPlanet[] = tessResponse.value;
       if (Array.isArray(tessData)) {
-        // Limit to first 500 for performance
+        
         const tessPlanets = tessData.slice(0, 500).map(normalizeTessPlanet);
         allPlanets.push(...tessPlanets);
         console.log(`Loaded ${tessPlanets.length} TESS planets`);
@@ -161,7 +155,7 @@ export async function loadAndUnifyDatasets(): Promise<UnifiedPlanet[]> {
       console.error('Failed to load TESS data:', tessResponse.reason);
     }
 
-    // If no data loaded, create some sample data for testing
+   
     if (allPlanets.length === 0) {
       console.warn('No real data loaded, creating sample planets for testing...');
       allPlanets.push(...createSamplePlanets());
@@ -172,17 +166,16 @@ export async function loadAndUnifyDatasets(): Promise<UnifiedPlanet[]> {
     
   } catch (error) {
     console.error('Error loading datasets:', error);
-    // Return sample data as fallback
+  
     console.log('Using sample data as fallback...');
     return createSamplePlanets();
   }
 }
 
-// Create sample planets for testing
+
 function createSamplePlanets(): UnifiedPlanet[] {
   const samplePlanets: UnifiedPlanet[] = [];
-  
-  // Create some sample planets from each telescope
+
   const telescopes: Array<'K2' | 'Kepler' | 'TESS'> = ['K2', 'Kepler', 'TESS'];
   
   for (let i = 0; i < 50; i++) {
@@ -215,40 +208,38 @@ function createSamplePlanets(): UnifiedPlanet[] {
   return samplePlanets;
 }
 
-// Get planet color based on temperature
+
 export function getPlanetColor(temperature: number): string {
-  if (temperature < 300) return '#6366f1'; // Cool - blue
-  if (temperature < 600) return '#10b981'; // Temperate - green  
-  if (temperature < 1000) return '#f59e0b'; // Warm - yellow
-  if (temperature < 1500) return '#ef4444'; // Hot - red
-  return '#ec4899'; // Very hot - pink
+  if (temperature < 300) return '#6366f1'; 
+  if (temperature < 600) return '#10b981';  
+  if (temperature < 1000) return '#f59e0b'; 
+  if (temperature < 1500) return '#ef4444'; 
+  return '#ec4899'; 
 }
 
-// Get planet size based on radius (clamped for visualization)
 export function getPlanetSize(radius: number): number {
-  // Clamp radius between 0.1 and 3.0 for reasonable visualization
+  
   const clampedRadius = Math.max(0.1, Math.min(radius, 5.0));
-  return 0.5 + (clampedRadius * 0.3); // Scale to reasonable 3D sizes
+  return 0.5 + (clampedRadius * 0.3); 
 }
 
-// Get telescope-specific styling
 export function getTelescopeStyle(telescope: 'K2' | 'Kepler' | 'TESS') {
   switch (telescope) {
     case 'K2':
       return {
-        primaryColor: '#3b82f6', // Blue
+        primaryColor: '#3b82f6',
         secondaryColor: '#1d4ed8',
         glowColor: '#60a5fa'
       };
     case 'Kepler':
       return {
-        primaryColor: '#10b981', // Green
+        primaryColor: '#10b981', 
         secondaryColor: '#047857',
         glowColor: '#34d399'
       };
     case 'TESS':
       return {
-        primaryColor: '#ef4444', // Red
+        primaryColor: '#ef4444', 
         secondaryColor: '#dc2626',
         glowColor: '#f87171'
       };

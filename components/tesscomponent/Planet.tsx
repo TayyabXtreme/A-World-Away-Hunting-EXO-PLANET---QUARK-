@@ -22,33 +22,28 @@ export default function Planet({ data, onClick, isSelected }: PlanetProps) {
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
     
-    // Update orbit progress
     const newProgress = orbitProgress + data.speed;
     setOrbitProgress(newProgress);
 
-    // Calculate position based on orbit
     const x = Math.cos(newProgress) * data.orbitRadius;
     const z = Math.sin(newProgress) * data.orbitRadius;
-    const y = Math.sin(newProgress * 0.5) * 0.5; // Small vertical oscillation
+    const y = Math.sin(newProgress * 0.5) * 0.5; 
 
     if (planetRef.current) {
       planetRef.current.position.set(x, y, z);
       planetRef.current.rotation.y = time * 0.5;
       planetRef.current.rotation.x = time * 0.2;
 
-      // Scale effect when selected or hovered
       const targetScale = isSelected ? 2.2 : (hovered ? 1.8 : 1);
       planetRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.15);
     }
 
-    // Animate glow
     if (glowRef.current) {
       const glowScale = isSelected ? 3 : (hovered ? 2.5 : 1.2);
       const pulseFactor = 1 + Math.sin(time * 3) * 0.15;
       glowRef.current.scale.setScalar(glowScale * pulseFactor);
       glowRef.current.position.copy(planetRef.current.position);
 
-      // Analysis glow effect
       if (data.isAnalyzing) {
         const analyzeGlow = 1 + Math.sin(time * 8) * 0.4;
         glowRef.current.scale.setScalar(analyzeGlow * 3);
@@ -58,7 +53,6 @@ export default function Planet({ data, onClick, isSelected }: PlanetProps) {
       }
     }
 
-    // Animate orbit ring
     if (orbitRef.current) {
       orbitRef.current.visible = hovered || isSelected;
       if (orbitRef.current.visible) {
@@ -70,9 +64,9 @@ export default function Planet({ data, onClick, isSelected }: PlanetProps) {
   });
 
   const getPredictionColor = () => {
-    if (data.prediction === 'confirmed') return '#10B981'; // Green
-    if (data.prediction === 'false-positive') return '#EF4444'; // Red
-    if (data.prediction === 'candidate') return '#F59E0B'; // Yellow
+    if (data.prediction === 'confirmed') return '#10B981';
+    if (data.prediction === 'false-positive') return '#EF4444';
+    if (data.prediction === 'candidate') return '#F59E0B';
     return data.color;
   };
 

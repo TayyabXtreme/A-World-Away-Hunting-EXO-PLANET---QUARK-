@@ -4,7 +4,6 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 
 
-// Configure the AWS Bedrock client
 const client = new BedrockRuntimeClient({
   region: process.env.AWS_REGION!,
   credentials: {
@@ -13,12 +12,10 @@ const client = new BedrockRuntimeClient({
   },
 });
 
-// Use Claude Opus - this model is widely available and excellent for analysis
+
 const modelId = "us.anthropic.claude-opus-4-20250514-v1:0";
 
-/**
- * Sends a prompt to the Claude model using the Converse API.
- */
+
 export const askClaude = async (prompt: string): Promise<string> => {
   console.log(`Sending prompt to Claude: "${prompt}"`);
 
@@ -27,7 +24,7 @@ export const askClaude = async (prompt: string): Promise<string> => {
     messages: [{ role: "user", content: [{ text: prompt }] }],
     inferenceConfig: {
       maxTokens: 1000,
-      temperature: 0.3, // Lower temperature for more consistent scientific analysis
+      temperature: 0.3,
     },
   });
 

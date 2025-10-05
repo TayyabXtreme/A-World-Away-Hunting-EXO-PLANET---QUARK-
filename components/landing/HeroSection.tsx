@@ -31,12 +31,9 @@ export default function HeroSection() {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <Badge variant="secondary" className="bg-slate-900/50 text-slate-300 border-slate-700 px-4 py-2 text-sm backdrop-blur-sm">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-              >
+             
                 <Sparkles className="h-4 w-4 mr-2" />
-              </motion.div>
+              
               Exoplanet Discovery Platform
             </Badge>
           </motion.div>
@@ -183,48 +180,64 @@ export default function HeroSection() {
           </motion.div>
 
           {/* Background Stars */}
-          {Array.from({ length: 30 }).map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-white rounded-full"
-              style={{
-                left: `${20 + Math.random() * 60}%`,
-                top: `${20 + Math.random() * 60}%`,
-              }}
-              animate={{
-                opacity: [0.3, 1, 0.3],
-                scale: [1, 1.5, 1],
-              }}
-              transition={{
-                duration: 2 + Math.random() * 3,
-                repeat: Infinity,
-                delay: Math.random() * 2,
-              }}
-            />
-          ))}
+          {Array.from({ length: 30 }).map((_, i) => {
+            // Use deterministic values based on index to avoid hydration issues
+            const leftPos = 20 + ((i * 13) % 60);
+            const topPos = 20 + ((i * 17) % 60);
+            const duration = 2 + ((i % 3) + 1);
+            const delay = (i % 4) * 0.5;
+            
+            return (
+              <motion.div
+                key={i}
+                className="absolute w-1 h-1 bg-white rounded-full"
+                style={{
+                  left: `${leftPos}%`,
+                  top: `${topPos}%`,
+                }}
+                animate={{
+                  opacity: [0.3, 1, 0.3],
+                  scale: [1, 1.5, 1],
+                }}
+                transition={{
+                  duration,
+                  repeat: Infinity,
+                  delay,
+                }}
+              />
+            );
+          })}
 
           {/* Floating Particles */}
-          {Array.from({ length: 15 }).map((_, i) => (
-            <motion.div
-              key={`particle-${i}`}
-              className="absolute w-2 h-2 bg-blue-400/20 rounded-full"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-              animate={{
-                y: [0, -30, 0],
-                x: [0, 20, 0],
-                opacity: [0.2, 0.8, 0.2],
-              }}
-              transition={{
-                duration: 6 + Math.random() * 4,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: Math.random() * 5,
-              }}
-            />
-          ))}
+          {Array.from({ length: 15 }).map((_, i) => {
+            // Use deterministic values based on index to avoid hydration issues
+            const leftPos = (i * 7) % 100;
+            const topPos = (i * 11) % 100;
+            const duration = 6 + ((i % 4) + 1);
+            const delay = (i % 5);
+            
+            return (
+              <motion.div
+                key={`particle-${i}`}
+                className="absolute w-2 h-2 bg-blue-400/20 rounded-full"
+                style={{
+                  left: `${leftPos}%`,
+                  top: `${topPos}%`,
+                }}
+                animate={{
+                  y: [0, -30, 0],
+                  x: [0, 20, 0],
+                  opacity: [0.2, 0.8, 0.2],
+                }}
+                transition={{
+                  duration,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay,
+                }}
+              />
+            );
+          })}
         </motion.div>
       </div>
     </section>
