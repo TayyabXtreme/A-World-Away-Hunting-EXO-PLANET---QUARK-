@@ -141,7 +141,7 @@ REQUIRED OUTPUT FORMAT (respond with EXACTLY this JSON structure):
   "disposition": "PC" | "CP" | "FP" | "APC" | "KP",
   "confidence": [number between 0.0 and 1.0],
   "reasoning": "[detailed scientific explanation of the TESS analysis]",
-  "habitability_assessment": "[assessment of potential for liquid water and habitability]",
+  "is_exoplanet": [boolean: true if PC/CP/APC/KP, false if FP],
   "planet_type": "[classification: Earth-like, Super-Earth, Sub-Neptune, Neptune-size, or Jupiter-size]"
 }
 
@@ -208,7 +208,7 @@ Based on your scientific analysis of these TESS mission parameters, what is your
         disposition: analysisResult.disposition,
         confidence: analysisResult.confidence,
         reasoning: analysisResult.reasoning,
-        habitability_assessment: analysisResult.habitability_assessment || 'Not assessed',
+        is_exoplanet: analysisResult.is_exoplanet !== undefined ? analysisResult.is_exoplanet : (analysisResult.disposition !== 'FP'),
         planet_type: analysisResult.planet_type || 'Unknown',
         mission: 'TESS',
         ai_analysis: true,

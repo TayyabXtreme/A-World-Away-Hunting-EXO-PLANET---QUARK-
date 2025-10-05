@@ -42,7 +42,7 @@ export interface TessPlanetData {
     disposition: string;
     confidence: number;
     reasoning: string;
-    habitability_assessment?: string;
+    is_exoplanet: boolean;
     planet_type?: string;
   };
 }

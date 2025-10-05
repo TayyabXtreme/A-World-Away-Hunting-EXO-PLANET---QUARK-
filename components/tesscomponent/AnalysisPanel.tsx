@@ -269,7 +269,7 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
           disposition: result.disposition,
           confidence: result.confidence,
           reasoning: result.reasoning,
-          habitability_assessment: result.habitability_assessment,
+          is_exoplanet: result.is_exoplanet,
           planet_type: result.planet_type
         }
       });
@@ -672,6 +672,12 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
                     </div>
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between">
+                        <span className="text-gray-400">Is Exoplanet:</span>
+                        <span className={`font-medium ${planet.claudeResponse.is_exoplanet ? 'text-green-300' : 'text-red-300'}`}>
+                          {planet.claudeResponse.is_exoplanet ? '✅ Yes' : '❌ No'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
                         <span className="text-gray-400">TESS Disposition:</span>
                         <span className="text-red-300 font-medium">{getTessDispositionName(planet.claudeResponse.disposition)}</span>
                       </div>
@@ -683,12 +689,6 @@ export default function AnalysisPanel({ planet, isOpen, onClose, onUpdate, onAna
                         <div className="flex justify-between">
                           <span className="text-gray-400">Planet Type:</span>
                           <span className="text-red-300 font-medium">{planet.claudeResponse.planet_type}</span>
-                        </div>
-                      )}
-                      {planet.claudeResponse.habitability_assessment && (
-                        <div className="mt-2">
-                          <span className="text-gray-400">Habitability:</span>
-                          <p className="text-red-200 text-xs mt-1 leading-tight">{planet.claudeResponse.habitability_assessment}</p>
                         </div>
                       )}
                       {planet.claudeResponse.reasoning && (
