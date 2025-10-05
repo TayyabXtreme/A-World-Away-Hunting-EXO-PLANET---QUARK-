@@ -106,19 +106,19 @@ export async function POST(req: NextRequest) {
         'Connection': 'keep-alive',
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Chat API error:', error);
     console.error('Error details:', {
-      message: error?.message,
-      stack: error?.stack,
-      name: error?.name
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : 'Error'
     });
     
     return NextResponse.json(
       { 
         error: 'Failed to process chat request',
-        details: error?.message || 'Unknown error',
-        type: error?.name || 'Error'
+        details: error instanceof Error ? error.message : 'Unknown error',
+        type: error instanceof Error ? error.name : 'Error'
       },
       { status: 500 }
     );
