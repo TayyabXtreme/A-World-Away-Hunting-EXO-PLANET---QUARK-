@@ -5,7 +5,8 @@ import {
   HeroSection, 
   SatelliteSection, 
   DatasetSection, 
-  Footer 
+  Footer,
+  ChatBot
 } from '@/components/landing';
 import SmoothScroll from '@/components/landing/SmoothScroll';
 
@@ -28,6 +29,9 @@ export default function HomePage() {
       
     
       <Footer />
+
+      {/* Sticky AI Chatbot */}
+      <ChatBot />
     </div>
   );
 }
