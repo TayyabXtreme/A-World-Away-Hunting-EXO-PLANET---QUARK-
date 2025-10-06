@@ -573,16 +573,16 @@ Content-Type: application/json
 
 ## 👥 Team
 
-**Team ExoQuark** - NASA Space Apps Challenge 2024, Hyderabad, Pakistan
+**Team ExoQuark** - NASA Space Apps Challenge 2025, Hyderabad, Pakistan
 
 | Name | Role | GitHub |
 |------|------|--------|
-| **Muhammad Tayyab** | Team Lead, Full-Stack Developer | [@TayyabXtreme](https://github.com/TayyabXtreme) |
-| **Munib Ur Rehman Memon** | Machine Learning Engineer, Backend Developer | - |
-| **Abrar Hussain** | Frontend Developer, UI/UX Designer | - |
-| **Hassan** | Data Scientist, Model Training | - |
+| **Muhammad Tayyab** | Full-Stack Developer, DevOps  | [@TayyabXtreme](https://github.com/TayyabXtreme) |
+| **Munib Ur Rehman Memon** | TeamLead, Machine Learning Engineer, Backend Developer | [@MunibUrRehmanMemon](https://github.com/MunibUrRehmanMemon) |
+| **Abrar Hussain** | Frontend Developer| - |
+| **Hassan** | Data Scientist|
 | **Tauha** | API Integration, Testing | - |
-| **Asadullah** | DevOps, Deployment | - |
+| **Asadullah** |  Data Scientist | - |
 
 ### Contributions
 
@@ -649,12 +649,12 @@ This project is licensed under the **MIT License**. See `LICENSE` file for detai
 If you use ExoQuark in academic research, please cite:
 
 ```bibtex
-@software{exoquark2024,
+@software{exoquark2025,
   title={ExoQuark: AI-Powered Exoplanet Classification System},
   author={Team ExoQuark: Tayyab, Muhammad and Memon, Munib Ur Rehman and Hussain, Abrar and Hassan and Tauha and Asadullah},
   year={2024},
   url={https://github.com/TayyabXtreme/A-World-Away-Hunting-EXO-PLANET---QUARK-},
-  note={NASA Space Apps Challenge 2024}
+  note={NASA Space Apps Challenge 2025}
 }
 ```
 
