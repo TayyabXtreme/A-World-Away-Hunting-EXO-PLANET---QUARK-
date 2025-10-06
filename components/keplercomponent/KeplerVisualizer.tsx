@@ -299,6 +299,19 @@ export default function KeplerVisualizer() {
             </div>
           </div>
         </div>
+
+        
+        {!selectedPlanet && (
+          <div className=" flex justify-center">
+            <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-blue-400/40 rounded-xl px-4 py-3 animate-pulse">
+              <p className="text-white font-semibold text-lg flex items-center gap-2">
+                <span className="text-xl">🤖</span>
+                Select a planet for AI Analysis
+                <span className="text-xl">🪐</span>
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Instructions */}

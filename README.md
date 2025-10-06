@@ -9,7 +9,7 @@
 
 **A World Away: Hunting Exoplanets with AI**
 
-*NASA Space Apps Challenge 2024 - Hyderabad, Pakistan*
+*NASA Space Apps Challenge 2025 - Hyderabad, Pakistan*
 
 [Live Demo](https://exoquark.vercel.app) • [Presentation](https://docs.google.com/presentation/d/1ivUFFT94jl8inqFNnVOXdlu4mQIUbSSC/edit?usp=sharing&ouid=118208340032333936540&rtpof=true&sd=true) • [GitHub Repository](https://github.com/TayyabXtreme/A-World-Away-Hunting-EXO-PLANET---QUARK-)
 
@@ -149,7 +149,25 @@ ExoQuark addresses these challenges through:
   "Models": "XGBoost (Kepler/K2), LightGBM (TESS)",
   "API Server": "Flask",
   "Preprocessing": "scikit-learn (StandardScaler, SimpleImputer)",
-  "Training Platform": "Kaggle (GPU-accelerated)"
+  "Training Platform": "Kaggle (GPU-accelerated)",
+  "Model Serialization": "Pickle/Joblib",
+  "ML Libraries": "pandas, numpy, scikit-learn"
+}
+```
+
+### AI Integration
+
+```json
+{
+  "AI Provider": "AWS Bedrock",
+  "Model": "Anthropic Claude 3.5 Sonnet",
+  "Use Cases": [
+    "Natural Language Explanations",
+    "Parameter Insights",
+    "Educational Context",
+    "Real-time Analysis"
+  ],
+  "Integration": "Next.js API Routes + AWS SDK"
 }
 ```
 
@@ -157,7 +175,9 @@ ExoQuark addresses these challenges through:
 
 ```json
 {
-  "Frontend Hosting": "Vercel",
+  "Frontend": "Vercel (Next.js)",
+  "ML Backend": "Render (Flask API)",
+  "AI Service": "AWS Bedrock",
   "CI/CD": "GitHub Actions",
   "Version Control": "Git/GitHub"
 }
@@ -185,10 +205,11 @@ ExoQuark addresses these challenges through:
            ┌───────────────┴────────────────┐
            ▼                                ▼
 ┌──────────────────────┐         ┌─────────────────────┐
-│  ML Models (Python)  │         │  AWS Bedrock        │
-│  - XGBoost (Kepler)  │         │  (Claude AI)        │
-│  - XGBoost (K2)      │         │  - Explanations     │
-│  - LightGBM (TESS)   │         │  - Insights         │
+│  ML Models (Flask)   │         │  AWS Bedrock        │
+│  Deployed on Render  │         │  (Claude 3.5)       │
+│  - XGBoost (Kepler)  │         │  - Explanations     │
+│  - XGBoost (K2)      │         │  - Insights         │
+│  - LightGBM (TESS)   │         │  - Real-time AI     │
 └──────────────────────┘         └─────────────────────┘
            │
            ▼
@@ -216,7 +237,7 @@ ExoQuark utilizes three official NASA exoplanet catalogs:
 
 ### 1. Kepler Mission
 
-- **Source**: [NASA Exoplanet Archive - Kepler KOI Table](https://exoplanetarchive.ipac.caltech.edu/)
+- **Source**: [NASA Exoplanet Archive - Kepler Cumulative KOI Table](https://exoplanetarchive.ipac.caltech.edu/cgi-bin/TblView/nph-tblView?app=ExoTbls&config=cumulative)
 - **Total Candidates**: ~10,000+ Kepler Objects of Interest
 - **Key Features**: Orbital period, planet radius, transit depth, stellar parameters
 - **Classification**: `koi_pdisposition` (CANDIDATE, FALSE POSITIVE, CONFIRMED)
@@ -224,7 +245,7 @@ ExoQuark utilizes three official NASA exoplanet catalogs:
 
 ### 2. K2 Mission
 
-- **Source**: [NASA Exoplanet Archive - K2 Candidates Table](https://exoplanetarchive.ipac.caltech.edu/)
+- **Source**: [NASA Exoplanet Archive - K2 Candidates & Planets Table](https://exoplanetarchive.ipac.caltech.edu/cgi-bin/TblView/nph-tblView?app=ExoTbls&config=k2pandc)
 - **Total Candidates**: ~1,000+ K2 planet candidates
 - **Key Features**: Similar to Kepler with extended field observations
 - **Classification**: `archive_disposition` (PC, FP, CP)
@@ -232,7 +253,7 @@ ExoQuark utilizes three official NASA exoplanet catalogs:
 
 ### 3. TESS Mission
 
-- **Source**: [NASA Exoplanet Archive - TESS TOI Table](https://exoplanetarchive.ipac.caltech.edu/)
+- **Source**: [NASA Exoplanet Archive - TESS TOI Table](https://exoplanetarchive.ipac.caltech.edu/cgi-bin/TblView/nph-tblView?app=ExoTbls&config=TOI)
 - **Total Candidates**: ~6,000+ TESS Objects of Interest
 - **Key Features**: All-sky survey data, shorter orbital periods
 - **Classification**: `tfopwg_disp` (APC, FP, CP, KP)
@@ -258,31 +279,71 @@ ExoQuark utilizes three official NASA exoplanet catalogs:
 
 ## 🤖 AI Integration
 
+### Machine Learning Models
+
+ExoQuark employs **mission-specific gradient boosting models** trained on NASA datasets:
+
+#### Model Architecture
+- **Kepler**: XGBoost classifier (14 features)
+- **K2**: XGBoost classifier (16 features)
+- **TESS**: LightGBM classifier (13 features)
+
+#### Training Process
+1. **Data Preparation**: Feature engineering, missing value imputation, standard scaling
+2. **Model Training**: Hyperparameter tuning with cross-validation on Kaggle (GPU)
+3. **Class Balancing**: SMOTE oversampling + class weight adjustment
+4. **Threshold Calibration**: Per-class probability thresholds for optimal F1 scores
+5. **Serialization**: Models saved as `.pkl` files with preprocessing artifacts
+
+#### Deployment
+- **Backend**: Flask API serving predictions
+- **Hosting**: Render (cloud deployment for ML backend)
+- **Endpoint**: `https://ml-backend-1zgp.onrender.com/predict/{mission}`
+- **Format**: JSON requests with planetary features → JSON responses with probabilities
+
 ### Claude AI via AWS Bedrock
 
-ExoQuark leverages **AWS Bedrock** to integrate **Anthropic's Claude** for:
+ExoQuark integrates **Anthropic's Claude 3.5 Sonnet** through **AWS Bedrock** for:
 
-#### 1. **Contextual Explanations**
-When a prediction is made, Claude generates human-readable explanations:
-- Why a candidate has high/low probability
-- Which features contributed to the classification
-- Suggested follow-up observations
-- Physical interpretation of parameters
+#### 1. **Natural Language Explanations**
+After ML model predictions, Claude provides:
+- Human-readable interpretation of classification results
+- Feature importance explanations
+- Physical context about planetary characteristics
+- Suggested follow-up observations for astronomers
 
-#### 2. **Parameter Insights**
-Real-time guidance when users edit values:
-- Alert for unrealistic parameter combinations
-- Educational context about planetary physics
-- Comparison with known exoplanets
+#### 2. **Real-time Parameter Insights**
+Interactive guidance when users modify candidate parameters:
+- Alerts for unrealistic value combinations
+- Educational context about exoplanet physics
+- Comparisons with known confirmed exoplanets
+- Habitability assessments
 
-#### 3. **Use Cases**
-- **Landing Page**: AI-assisted design and content generation
-- **Dataset Visualizer**: AI-powered explanations of distributions
-- **Mission Pages**: Real-time classification with natural language output
+#### 3. **Integration Architecture**
+```javascript
+// Next.js API Route → AWS Bedrock
+const claudeResponse = await bedrock.invokeModel({
+  modelId: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+  body: JSON.stringify({
+    messages: [{ role: "user", content: prompt }],
+    max_tokens: 1500,
+    temperature: 0.7
+  })
+});
+```
+
+#### 4. **Use Cases**
+- **Landing Page Chatbot**: AI-powered Q&A about exoplanets (Gemini integration)
+- **Analysis Panels**: Real-time explanations for ML predictions
+- **Mission Pages**: Contextual insights for candidate characteristics
 
 ### AI Transparency
 
-> ⚠️ **AI Disclosure**: The landing page and dataset visualization page designs were created with AI assistance (Claude/GPT). All mission-specific pages (Kepler, K2, TESS) and analysis panels were developed manually by our team. Machine learning models were trained by Team ExoQuark using open-source libraries.
+> ⚠️ **AI Disclosure**: 
+> - **Machine Learning Models**: Trained by Team ExoQuark using XGBoost/LightGBM on NASA datasets
+> - **Claude AI**: Used for natural language explanations and educational context
+> - **Design Assistance**: Landing page layout and content created with AI assistance (Claude/GPT)
+> - **Mission Pages**: Kepler, K2, TESS visualizers and analysis panels developed manually by our team
 
 ---
 
